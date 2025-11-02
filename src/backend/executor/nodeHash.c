@@ -34,6 +34,7 @@
 #include "executor/hashjoin.h"
 #include "executor/nodeHash.h"
 #include "executor/nodeHashjoin.h"
+#include "lib/bloomfilter.h"
 #include "miscadmin.h"
 #include "port/pg_bitutils.h"
 #include "utils/lsyscache.h"
@@ -176,6 +177,13 @@ MultiExecPrivateHash(HashState *node)
 		{
 			uint32		hashvalue = DatumGetUInt32(hashdatum);
 			int			bucketNumber;
+
+      // elog(LOG, "[KARTICAM] nodeHash.c before if");
+			if (node->outer_bloom_filter != NULL)
+				bloom_add_element(node->outer_bloom_filter,
+								  (unsigned char *) &hashvalue,
+								  sizeof(uint32));
+      // elog(LOG, "[KARTICAM] nodeHash.c after if");
 
 			bucketNumber = ExecHashGetSkewBucket(hashtable, hashvalue);
 			if (bucketNumber != INVALID_SKEW_BUCKET_NO)
@@ -2012,6 +2020,8 @@ ExecScanHashBucket(HashJoinState *hjstate,
 
 	while (hashTuple != NULL)
 	{
+		/* instrumentation: count that we inspected one hash-table tuple */
+		hjstate->hj_hash_probe_count++;
 		if (hashTuple->hashvalue == hashvalue)
 		{
 			TupleTableSlot *inntuple;
@@ -2069,6 +2079,8 @@ ExecParallelScanHashBucket(HashJoinState *hjstate,
 
 	while (hashTuple != NULL)
 	{
+		/* instrumentation: count that we inspected one hash-table tuple */
+		hjstate->hj_hash_probe_count++;
 		if (hashTuple->hashvalue == hashvalue)
 		{
 			TupleTableSlot *inntuple;

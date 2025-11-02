@@ -15,6 +15,7 @@
 #define NODESEQSCAN_H
 
 #include "access/parallel.h"
+#include "lib/bloomfilter.h"
 #include "nodes/execnodes.h"
 
 extern SeqScanState *ExecInitSeqScan(SeqScan *node, EState *estate, int eflags);
@@ -27,5 +28,9 @@ extern void ExecSeqScanInitializeDSM(SeqScanState *node, ParallelContext *pcxt);
 extern void ExecSeqScanReInitializeDSM(SeqScanState *node, ParallelContext *pcxt);
 extern void ExecSeqScanInitializeWorker(SeqScanState *node,
 										ParallelWorkerContext *pwcxt);
+extern void SeqScanAttachBloomFilter(SeqScanState *node,
+									 bloom_filter *filter,
+									 ExprState *hash_expr);
+extern void SeqScanDetachBloomFilter(SeqScanState *node);
 
 #endif							/* NODESEQSCAN_H */

@@ -32,6 +32,7 @@
 #include "access/tupconvert.h"
 #include "executor/instrument.h"
 #include "fmgr.h"
+#include "lib/bloomfilter.h"
 #include "lib/ilist.h"
 #include "lib/pairingheap.h"
 #include "nodes/miscnodes.h"
@@ -1632,6 +1633,9 @@ typedef struct SeqScanState
 {
 	ScanState	ss;				/* its first field is NodeTag */
 	Size		pscan_len;		/* size of parallel heap scan descriptor */
+	bloom_filter *lipBloomFilter;	/* optional lookahead bloom filter */
+	ExprState  *lipBloomHashExpr; /* hash expression for bloom filter */
+	bool		lipBloomActive;	/* true when bloom filtering is enabled */
 } SeqScanState;
 
 /* ----------------
@@ -2274,6 +2278,14 @@ typedef struct HashJoinState
 	int			hj_JoinState;
 	bool		hj_MatchedOuter;
 	bool		hj_OuterNotEmpty;
+	bloom_filter *hj_BloomFilter;	/* bloom filter built from inner */
+	SeqScanState *hj_BloomOuterSeq; /* outer seqscan consuming bloom filter */
+	bool		hj_BloomEnabled;	/* true if bloom filter active */
+	int64		hj_BloomTotalElems; /* estimated cardinality for filter */
+	bool		hj_InEndHashJoin;  /* true if we're in ExecEndHashJoin */
+
+	/* instrumentation: number of inner-hashtable tuple inspections during probes */
+	uint64		hj_hash_probe_count;
 } HashJoinState;
 
 
@@ -2838,6 +2850,7 @@ typedef struct HashState
 
 	/* Parallel hash state. */
 	struct ParallelHashJoinState *parallel_state;
+	bloom_filter *outer_bloom_filter; /* optional bloom filter for outer probe */
 } HashState;
 
 /* ----------------

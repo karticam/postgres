@@ -32,6 +32,7 @@
 #include "executor/execScan.h"
 #include "executor/executor.h"
 #include "executor/nodeSeqscan.h"
+#include "lib/bloomfilter.h"
 #include "utils/rel.h"
 
 static TupleTableSlot *SeqNext(SeqScanState *node);
@@ -54,6 +55,8 @@ SeqNext(SeqScanState *node)
 	EState	   *estate;
 	ScanDirection direction;
 	TupleTableSlot *slot;
+	ExprContext *econtext;
+	bool		use_bloom;
 
 	/*
 	 * get information from the estate and scan state
@@ -62,6 +65,11 @@ SeqNext(SeqScanState *node)
 	estate = node->ss.ps.state;
 	direction = estate->es_direction;
 	slot = node->ss.ss_ScanTupleSlot;
+	econtext = node->ss.ps.ps_ExprContext;
+
+	use_bloom = node->lipBloomActive &&
+		node->lipBloomFilter != NULL &&
+		node->lipBloomHashExpr != NULL;
 
 	if (scandesc == NULL)
 	{
@@ -78,8 +86,52 @@ SeqNext(SeqScanState *node)
 	/*
 	 * get the next tuple from the table
 	 */
-	if (table_scan_getnextslot(scandesc, direction, slot))
-		return slot;
+  // elog(LOG, "[KARTICAM] nodeSeqScan.c before first if");
+	if (!use_bloom)
+	{
+    // elog(LOG, "[KARTICAM] nodeSeqScan.c bloom not used");
+		if (table_scan_getnextslot(scandesc, direction, slot))
+			return slot;
+		return NULL;
+	}
+  // elog(LOG, "[KARTICAM] nodeSeqScan.c after first if");
+
+	while (table_scan_getnextslot(scandesc, direction, slot))
+	{
+    // elog(LOG, "[KARTICAM] nodeSeqScan.c inside while loop if");
+		Datum		hashdatum;
+		bool		isnull;
+		uint32		hashvalue;
+
+    ResetExprContext(econtext);
+    econtext->ecxt_scantuple = slot;
+		econtext->ecxt_outertuple = slot;
+
+    // elog(LOG, "[KARTICAM] nodeSeqScan.c before hashdatum");
+		hashdatum = ExecEvalExprSwitchContext(node->lipBloomHashExpr,
+											  econtext,
+											  &isnull);
+    // elog(LOG, "[KARTICAM] nodeSeqScan.c after hashdatum");
+		if (isnull) {
+      // elog(LOG, "[KARTICAM] nodeSeqScan.c isnull set to true");
+			continue;
+    }
+
+    // elog(LOG, "[KARTICAM] nodeSeqScan.c before hashvalue");
+		hashvalue = DatumGetUInt32(hashdatum);
+    // elog(LOG, "[KARTICAM] nodeSeqScan.c after hashvalue");
+
+    // elog(LOG, "[KARTICAM] nodeSeqScan.c before bloom_lacks_element if");
+		if (!bloom_lacks_element(node->lipBloomFilter,
+								 (unsigned char *) &hashvalue,
+								 sizeof(uint32))) {
+      // elog(LOG, "[KARTICAM] nodeSeqScan.c after bloom_lacks_element if");
+      return slot;
+    }
+			
+	}
+  // elog(LOG, "[KARTICAM] nodeSeqScan.c exitted while loop");
+
 	return NULL;
 }
 
@@ -408,4 +460,29 @@ ExecSeqScanInitializeWorker(SeqScanState *node,
 	pscan = shm_toc_lookup(pwcxt->toc, node->ss.ps.plan->plan_node_id, false);
 	node->ss.ss_currentScanDesc =
 		table_beginscan_parallel(node->ss.ss_currentRelation, pscan);
+}
+
+/*
+ * SeqScanAttachBloomFilter
+ *		Attach a bloom filter that should be consulted before returning tuples.
+ */
+void
+SeqScanAttachBloomFilter(SeqScanState *node,
+						 bloom_filter *filter,
+						 ExprState *hash_expr)
+{
+	node->lipBloomFilter = filter;
+	node->lipBloomHashExpr = hash_expr;
+	node->lipBloomActive = (filter != NULL && hash_expr != NULL);
+}
+
+/*
+ * SeqScanDetachBloomFilter
+ *		Remove any bloom filter previously attached to the scan.
+ */
+void
+SeqScanDetachBloomFilter(SeqScanState *node)
+{
+	node->lipBloomFilter = NULL;
+	node->lipBloomActive = false;
 }

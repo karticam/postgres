@@ -48,6 +48,11 @@ struct bloom_filter
 	uint64		seed;
 	/* m is bitset size, in bits.  Must be a power of two <= 2^32.  */
 	uint64		m;
+	/* instrumentation counters */
+	uint64		insert_count;
+	uint64		scan_count;    /* number of membership tests */
+	uint64		reject_count;  /* bloom_lacks_element returned true */
+	uint64		pass_count;    /* bloom_lacks_element returned false */
 	unsigned char bitset[FLEXIBLE_ARRAY_MEMBER];
 };
 
@@ -144,6 +149,9 @@ bloom_add_element(bloom_filter *filter, unsigned char *elem, size_t len)
 	{
 		filter->bitset[hashes[i] >> 3] |= 1 << (hashes[i] & 7);
 	}
+
+	/* instrument this insertion */
+	filter->insert_count++;
 }
 
 /*
@@ -161,13 +169,20 @@ bloom_lacks_element(bloom_filter *filter, unsigned char *elem, size_t len)
 
 	k_hashes(filter, hashes, elem, len);
 
+	/* instrument this membership test */
+	filter->scan_count++;
+
 	/* Map a bit-wise address to a byte-wise address + bit offset */
 	for (i = 0; i < filter->k_hash_funcs; i++)
 	{
 		if (!(filter->bitset[hashes[i] >> 3] & (1 << (hashes[i] & 7))))
+		{
+			filter->reject_count++;
 			return true;
+		}
 	}
 
+	filter->pass_count++;
 	return false;
 }
 
@@ -190,6 +205,39 @@ bloom_prop_bits_set(bloom_filter *filter)
 	uint64		bits_set = pg_popcount((char *) filter->bitset, bitset_bytes);
 
 	return bits_set / (double) filter->m;
+}
+
+/* Instrumentation accessors */
+uint64
+bloom_get_insert_count(bloom_filter *filter)
+{
+	if (filter == NULL)
+		return 0;
+	return filter->insert_count;
+}
+
+uint64
+bloom_get_scan_count(bloom_filter *filter)
+{
+	if (filter == NULL)
+		return 0;
+	return filter->scan_count;
+}
+
+uint64
+bloom_get_reject_count(bloom_filter *filter)
+{
+	if (filter == NULL)
+		return 0;
+	return filter->reject_count;
+}
+
+uint64
+bloom_get_pass_count(bloom_filter *filter)
+{
+	if (filter == NULL)
+		return 0;
+	return filter->pass_count;
 }
 
 /*

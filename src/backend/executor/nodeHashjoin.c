@@ -168,7 +168,10 @@
 #include "executor/hashjoin.h"
 #include "executor/nodeHash.h"
 #include "executor/nodeHashjoin.h"
+#include "executor/nodeSeqscan.h"
+#include "lib/bloomfilter.h"
 #include "miscadmin.h"
+#include "optimizer/optimizer.h"
 #include "utils/lsyscache.h"
 #include "utils/sharedtuplestore.h"
 #include "utils/wait_event.h"
@@ -202,6 +205,7 @@ static TupleTableSlot *ExecHashJoinGetSavedTuple(HashJoinState *hjstate,
 static bool ExecHashJoinNewBatch(HashJoinState *hjstate);
 static bool ExecParallelHashJoinNewBatch(HashJoinState *hjstate);
 static void ExecParallelHashJoinPartitionOuter(HashJoinState *hjstate);
+static void HashJoinDisableBloomFilter(HashJoinState *hjstate);
 
 
 /* ----------------------------------------------------------------
@@ -270,6 +274,24 @@ ExecHashJoinImpl(PlanState *pstate, bool parallel)
 				 * First time through: build hash table for inner relation.
 				 */
 				Assert(hashtable == NULL);
+
+			if (node->hj_BloomEnabled && node->hj_BloomTotalElems > 0)
+			{
+				MemoryContext oldcxt;
+				bloom_filter *filter;
+
+				if (node->hj_BloomFilter != NULL)
+					bloom_free(node->hj_BloomFilter);
+
+				oldcxt = MemoryContextSwitchTo(node->js.ps.state->es_query_cxt->parent);
+				filter = bloom_create(node->hj_BloomTotalElems, work_mem, 0);
+				MemoryContextSwitchTo(oldcxt);				
+				
+				// elog(LOG, "[BLOOM] Created new bloom filter %p at %s:%d", (void*)filter, __FILE__, __LINE__);
+				node->hj_BloomFilter = filter;
+				hashNode->outer_bloom_filter = filter;			}
+			else
+				hashNode->outer_bloom_filter = NULL;
 
 				/*
 				 * If the outer relation is completely empty, and it's not
@@ -344,6 +366,19 @@ ExecHashJoinImpl(PlanState *pstate, bool parallel)
 				(void) MultiExecProcNode((PlanState *) hashNode);
 
 				/*
+				 * Now that the inner side has been hashed, the bloom filter (if any)
+				 * will have been populated by the hash node's inserts.  Attach the
+				 * bloom filter to the outer seqscan only now so the seqscan does not
+				 * observe an empty/unpopulated bloom during the prefetch/emptiness
+				 * check above.
+				 */
+				if (node->hj_BloomEnabled && node->hj_BloomFilter != NULL &&
+					node->hj_BloomOuterSeq != NULL)
+					SeqScanAttachBloomFilter(node->hj_BloomOuterSeq,
+									 node->hj_BloomFilter,
+									 node->hj_BloomOuterSeq->lipBloomHashExpr);
+
+				/*
 				 * If the inner relation is completely empty, and we're not
 				 * doing a left outer join, we can quit without scanning the
 				 * outer relation.
@@ -369,6 +404,9 @@ ExecHashJoinImpl(PlanState *pstate, bool parallel)
 				 * began scanning the outer relation
 				 */
 				hashtable->nbatch_outstart = hashtable->nbatch;
+
+				if (node->hj_BloomEnabled && hashtable->nbatch > 1)
+					HashJoinDisableBloomFilter(node);
 
 				/*
 				 * Reset OuterNotEmpty for scan.  (It's OK if we fetched a
@@ -894,6 +932,61 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 								HJ_FILL_INNER(hjstate));
 
 		/*
+		 * Enable a simple bloom filter for the outer seqscan when the join
+		 * shape matches our prototype: single inner equi-hash join with a
+		 * sequential outer scan and no parallelism.
+		 */
+    // fprintf(stderr, "[KARTICAM] checkpoint here V3: %d\n", 932);
+    // fflush(stderr);
+    // elog(LOG, "[KARTICAM] checkpoint here V3: %d", 934);
+
+		if (IsUnderPostmaster && !IsBootstrapProcessingMode() &&
+      !IsInitProcessingMode() &&
+      node->join.jointype == JOIN_INNER &&
+			list_length(node->hashkeys) == 1 &&
+			!node->join.plan.parallel_aware &&
+			!outerNode->parallel_aware &&
+			!hashNode->plan.parallel_aware &&
+			hashstate->parallel_state == NULL &&
+			IsA(outerPlanState(hjstate), SeqScanState))
+		{
+      // fprintf(stderr, "[KARTICAM] inside the if statement: %d\n", 946);
+      // fflush(stderr);
+			SeqScanState *seqstate = castNode(SeqScanState,
+													  outerPlanState(hjstate));
+			ExprState  *seqHashExpr;
+			double		est_rows = hashNode->plan.plan_rows;
+			int64		total_elems;
+      
+			total_elems = (int64) clamp_row_est(est_rows);
+			if (total_elems < 1)
+				total_elems = 1;
+
+			seqHashExpr =
+				ExecBuildHash32Expr(seqstate->ss.ps.ps_ResultTupleDesc,
+									seqstate->ss.ps.resultops,
+									outer_hashfuncid,
+									node->hashcollations,
+									node->hashkeys,
+									hash_strict,
+									&seqstate->ss.ps,
+									0,
+									false);
+
+			seqstate->lipBloomFilter = NULL;
+			seqstate->lipBloomHashExpr = seqHashExpr;
+			seqstate->lipBloomActive = false;
+
+			hjstate->hj_BloomFilter = NULL;
+			hjstate->hj_BloomOuterSeq = seqstate;
+			hjstate->hj_BloomEnabled = true;
+			hjstate->hj_BloomTotalElems = total_elems;
+			hashstate->outer_bloom_filter = NULL;
+		}
+    // fprintf(stderr, "[KARTICAM] exitted from the if statement: %d\n", 979);
+    // fflush(stderr);
+
+		/*
 		 * Set up the skew table hash function while we have a record of the
 		 * first key's hash function Oid.
 		 */
@@ -935,6 +1028,12 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 	hjstate->hj_MatchedOuter = false;
 	hjstate->hj_OuterNotEmpty = false;
 
+	/* initialize instrumentation counters */
+	hjstate->hj_hash_probe_count = 0;
+
+	/* initialize flag to track when we're in ExecEndHashJoin */
+	hjstate->hj_InEndHashJoin = false;
+
 	return hjstate;
 }
 
@@ -948,6 +1047,48 @@ void
 ExecEndHashJoin(HashJoinState *node)
 {
 	/*
+	 * Set flag to indicate we're in ExecEndHashJoin
+	 * This will prevent HashJoinDisableBloomFilter from freeing the bloom filter
+	 * until we're done with it
+	 */
+	node->hj_InEndHashJoin = true;
+
+	/*
+	 * If bloom instrumentation is active, log its counters before we free
+	 * the bloom filter and destroy the hash table.
+	 */
+	uint64 probes = node->hj_hash_probe_count;
+	int nbuckets = node->hj_HashTable ? node->hj_HashTable->nbuckets : 0;
+
+	// elog(LOG, "[BLOOM] About to log stats, bloom filter is %p at %s:%d", 
+            //  (void*)node->hj_BloomFilter, __FILE__, __LINE__);
+
+	if (node->hj_BloomFilter != NULL)
+	{
+		uint64 inserts = bloom_get_insert_count(node->hj_BloomFilter);
+		uint64 scans = bloom_get_scan_count(node->hj_BloomFilter);
+		uint64 rejects = bloom_get_reject_count(node->hj_BloomFilter);
+		uint64 passes = bloom_get_pass_count(node->hj_BloomFilter);
+
+		elog(LOG, "HashJoin bloom stats: inserts=%llu scans=%llu rejects=%llu passes=%llu hash_probes=%llu nbuckets=%d",
+				(unsigned long long) inserts,
+				(unsigned long long) scans,
+				(unsigned long long) rejects,
+				(unsigned long long) passes,
+				(unsigned long long) probes,
+				nbuckets);
+
+		/* Now we can safely free the bloom filter */
+		bloom_free(node->hj_BloomFilter);
+		node->hj_BloomFilter = NULL;
+	} else {
+		elog(LOG, "HashJoin stats (no bloom): hash_probes=%llu nbuckets=%d",
+				(unsigned long long) probes,
+				nbuckets);
+	}
+
+	/* Now safe to disable bloom filter since we've already gathered stats */
+	HashJoinDisableBloomFilter(node);	/*
 	 * Free hash table
 	 */
 	if (node->hj_HashTable)
@@ -961,6 +1102,42 @@ ExecEndHashJoin(HashJoinState *node)
 	 */
 	ExecEndNode(outerPlanState(node));
 	ExecEndNode(innerPlanState(node));
+}
+
+/*
+ * HashJoinDisableBloomFilter
+ *		Detach and deactivate any bloom filter associated with this hash join.
+ */
+static void
+HashJoinDisableBloomFilter(HashJoinState *hjstate)
+{
+	HashState  *hashstate;
+
+	if (!hjstate->hj_BloomEnabled)
+		return;
+        
+	// elog(LOG, "[BLOOM] Disabling bloom filter %p at %s:%d, InEndHashJoin=%d", 
+  //            (void*)hjstate->hj_BloomFilter, __FILE__, __LINE__, 
+  //            hjstate->hj_InEndHashJoin);
+
+	/* Detach from the SeqScan */
+	if (hjstate->hj_BloomOuterSeq != NULL)
+		SeqScanDetachBloomFilter(hjstate->hj_BloomOuterSeq);
+
+	/* Clear the pointer in HashState */
+	hashstate = castNode(HashState, innerPlanState(hjstate));
+	if (hashstate != NULL)
+		hashstate->outer_bloom_filter = NULL;
+
+	/* In ExecEndHashJoin we want to keep the bloom filter around for stats */
+  if (hjstate->hj_BloomFilter != NULL && hjstate->hj_InEndHashJoin)
+  {
+      bloom_free(hjstate->hj_BloomFilter);
+      hjstate->hj_BloomFilter = NULL;
+  }
+  hjstate->hj_BloomEnabled = false;
+	hjstate->hj_BloomOuterSeq = NULL;
+	hjstate->hj_BloomTotalElems = 0;
 }
 
 /*
@@ -1137,6 +1314,9 @@ ExecHashJoinNewBatch(HashJoinState *hjstate)
 	uint32		hashvalue;
 
 	nbatch = hashtable->nbatch;
+	if (hjstate->hj_BloomEnabled)
+		HashJoinDisableBloomFilter(hjstate);
+
 	curbatch = hashtable->curbatch;
 
 	if (curbatch > 0)

@@ -24,4 +24,10 @@ extern bool bloom_lacks_element(bloom_filter *filter, unsigned char *elem,
 								size_t len);
 extern double bloom_prop_bits_set(bloom_filter *filter);
 
+/* instrumentation accessors */
+extern uint64 bloom_get_insert_count(bloom_filter *filter);
+extern uint64 bloom_get_scan_count(bloom_filter *filter);
+extern uint64 bloom_get_reject_count(bloom_filter *filter);
+extern uint64 bloom_get_pass_count(bloom_filter *filter);
+
 #endif							/* BLOOMFILTER_H */
