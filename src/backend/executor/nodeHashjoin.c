@@ -280,16 +280,19 @@ ExecHashJoinImpl(PlanState *pstate, bool parallel)
 				MemoryContext oldcxt;
 				bloom_filter *filter;
 
-				if (node->hj_BloomFilter != NULL)
-					bloom_free(node->hj_BloomFilter);
+					if (node->hj_BloomFilter != NULL)
+						bloom_free(node->hj_BloomFilter);
 
-				oldcxt = MemoryContextSwitchTo(node->js.ps.state->es_query_cxt->parent);
-				filter = bloom_create(node->hj_BloomTotalElems, work_mem, 0);
-				MemoryContextSwitchTo(oldcxt);				
-				
-				// elog(LOG, "[BLOOM] Created new bloom filter %p at %s:%d", (void*)filter, __FILE__, __LINE__);
-				node->hj_BloomFilter = filter;
-				hashNode->outer_bloom_filter = filter;			}
+					oldcxt = MemoryContextSwitchTo(node->js.ps.state->es_query_cxt);
+					/* Size in bytes equals estimated inner rows; use fixed k=3. */
+					filter = bloom_create_with_params(node->hj_BloomTotalElems,
+													  3,
+													  0);
+					MemoryContextSwitchTo(oldcxt);				
+					
+					// elog(LOG, "[BLOOM] Created new bloom filter %p at %s:%d", (void*)filter, __FILE__, __LINE__);
+					node->hj_BloomFilter = filter;
+					hashNode->outer_bloom_filter = filter;			}
 			else
 				hashNode->outer_bloom_filter = NULL;
 

@@ -125,6 +125,41 @@ bloom_create(int64 total_elems, int bloom_work_mem, uint64 seed)
 }
 
 /*
+ * Create Bloom filter with explicit sizing parameters.
+ *
+ * k_hash_funcs: number of hash functions to use (clamped to [1, MAX_HASH_FUNCS])
+ * size_bytes: size of the bitset in bytes (will be rounded down to power-of-two)
+ */
+bloom_filter *
+bloom_create_with_params(uint64 size_bytes, int k_hash_funcs, uint64 seed)
+{
+	bloom_filter *filter;
+	uint64		bitset_bits;
+	uint64		bitset_bytes;
+	int			k;
+
+	/* enforce at least one byte and clamp to power-of-two bits <= 2^32 */
+	if (size_bytes < 1)
+		size_bytes = 1;
+
+	if (size_bytes > (UINT64CONST(1) << 29))
+		size_bytes = (UINT64CONST(1) << 29);
+
+	bitset_bits = UINT64CONST(1) << my_bloom_power(size_bytes * BITS_PER_BYTE);
+	bitset_bytes = bitset_bits / BITS_PER_BYTE;
+
+	k = Max(1, Min(k_hash_funcs, MAX_HASH_FUNCS));
+
+	filter = palloc0(offsetof(bloom_filter, bitset) +
+					 sizeof(unsigned char) * bitset_bytes);
+	filter->k_hash_funcs = k;
+	filter->seed = seed;
+	filter->m = bitset_bits;
+
+	return filter;
+}
+
+/*
  * Free Bloom filter
  */
 void
