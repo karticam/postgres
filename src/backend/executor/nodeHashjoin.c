@@ -171,10 +171,75 @@
 #include "executor/nodeSeqscan.h"
 #include "lib/bloomfilter.h"
 #include "miscadmin.h"
+#include "nodes/nodeFuncs.h"
 #include "optimizer/optimizer.h"
+#include "parser/parsetree.h"
 #include "utils/lsyscache.h"
 #include "utils/sharedtuplestore.h"
 #include "utils/wait_event.h"
+
+typedef struct BloomSeqHashkeyContext
+{
+	List	   *outer_tlist;
+} BloomSeqHashkeyContext;
+
+static Node *BloomRemapOuterVars(Node *node, void *context);
+static List *BuildSeqscanBloomHashkeys(List *hashkeys, Plan *outer_plan);
+
+static Node *
+BloomRemapOuterVars(Node *node, void *context)
+{
+	BloomSeqHashkeyContext *ctx = (BloomSeqHashkeyContext *) context;
+
+	if (node == NULL)
+		return NULL;
+
+	if (IsA(node, Var))
+	{
+		Var *var = (Var *) node;
+
+		if (var->varno == OUTER_VAR && var->varlevelsup == 0)
+		{
+			TargetEntry *tle;
+
+			if (ctx->outer_tlist == NIL)
+				elog(ERROR, "hash join outer plan targetlist not initialized");
+
+			tle = get_tle_by_resno(ctx->outer_tlist, var->varattno);
+			if (tle == NULL)
+				elog(ERROR, "could not map hash join outer attno %d", var->varattno);
+
+			return copyObject(tle->expr);
+		}
+
+		return (Node *) copyObject(var);
+	}
+
+	return expression_tree_mutator(node, BloomRemapOuterVars, context);
+}
+
+static List *
+BuildSeqscanBloomHashkeys(List *hashkeys, Plan *outer_plan)
+{
+	ListCell   *lc;
+	List	   *result = NIL;
+	BloomSeqHashkeyContext ctx;
+
+	if (outer_plan == NULL)
+		return (List *) copyObject(hashkeys);
+
+	ctx.outer_tlist = outer_plan->targetlist;
+
+	foreach(lc, hashkeys)
+	{
+		Expr *expr = (Expr *) lfirst(lc);
+
+		result = lappend(result,
+					   BloomRemapOuterVars((Node *) expr, &ctx));
+	}
+
+	return result;
+}
 
 
 /*
@@ -941,8 +1006,8 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
     // elog(LOG, "[KARTICAM] checkpoint here V3: %d", 934);
 
 		if (IsUnderPostmaster && !IsBootstrapProcessingMode() &&
-      !IsInitProcessingMode() &&
-      node->join.jointype == JOIN_INNER &&
+	      !IsInitProcessingMode() &&
+	      node->join.jointype == JOIN_INNER &&
 			list_length(node->hashkeys) == 1 &&
 			!node->join.plan.parallel_aware &&
 			!outerNode->parallel_aware &&
@@ -950,24 +1015,28 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 			hashstate->parallel_state == NULL &&
 			IsA(outerPlanState(hjstate), SeqScanState))
 		{
-      // fprintf(stderr, "[KARTICAM] inside the if statement: %d\n", 946);
-      // fflush(stderr);
+	      // fprintf(stderr, "[KARTICAM] inside the if statement: %d\n", 946);
+	      // fflush(stderr);
 			SeqScanState *seqstate = castNode(SeqScanState,
-													  outerPlanState(hjstate));
+										  outerPlanState(hjstate));
+			List	   *seq_hashkeys;
 			ExprState  *seqHashExpr;
 			double		est_rows = hashNode->plan.plan_rows;
 			int64		total_elems;
-      
+
 			total_elems = (int64) clamp_row_est(est_rows);
 			if (total_elems < 1)
 				total_elems = 1;
+
+			seq_hashkeys = BuildSeqscanBloomHashkeys(node->hashkeys,
+												outerNode);
 
 			seqHashExpr =
 				ExecBuildHash32Expr(seqstate->ss.ps.ps_ResultTupleDesc,
 									seqstate->ss.ps.resultops,
 									outer_hashfuncid,
 									node->hashcollations,
-									node->hashkeys,
+									seq_hashkeys,
 									hash_strict,
 									&seqstate->ss.ps,
 									0,
