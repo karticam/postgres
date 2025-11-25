@@ -178,12 +178,10 @@ MultiExecPrivateHash(HashState *node)
 			uint32		hashvalue = DatumGetUInt32(hashdatum);
 			int			bucketNumber;
 
-      // elog(LOG, "[KARTICAM] nodeHash.c before if");
 			if (node->outer_bloom_filter != NULL)
 				bloom_add_element(node->outer_bloom_filter,
 								  (unsigned char *) &hashvalue,
 								  sizeof(uint32));
-      // elog(LOG, "[KARTICAM] nodeHash.c after if");
 
 			bucketNumber = ExecHashGetSkewBucket(hashtable, hashvalue);
 			if (bucketNumber != INVALID_SKEW_BUCKET_NO)

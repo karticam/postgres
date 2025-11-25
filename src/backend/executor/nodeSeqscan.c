@@ -86,19 +86,15 @@ SeqNext(SeqScanState *node)
 	/*
 	 * get the next tuple from the table
 	 */
-  // elog(LOG, "[KARTICAM] nodeSeqScan.c before first if");
 	if (!use_bloom)
 	{
-    // elog(LOG, "[KARTICAM] nodeSeqScan.c bloom not used");
 		if (table_scan_getnextslot(scandesc, direction, slot))
 			return slot;
 		return NULL;
 	}
-  // elog(LOG, "[KARTICAM] nodeSeqScan.c after first if");
 
 	while (table_scan_getnextslot(scandesc, direction, slot))
 	{
-    // elog(LOG, "[KARTICAM] nodeSeqScan.c inside while loop if");
 		Datum		hashdatum;
 		bool		isnull;
 		uint32		hashvalue;
@@ -107,30 +103,26 @@ SeqNext(SeqScanState *node)
     econtext->ecxt_scantuple = slot;
 		econtext->ecxt_outertuple = slot;
 
-    // elog(LOG, "[KARTICAM] nodeSeqScan.c before hashdatum");
 		hashdatum = ExecEvalExprSwitchContext(node->lipBloomHashExpr,
 											  econtext,
 											  &isnull);
-    // elog(LOG, "[KARTICAM] nodeSeqScan.c after hashdatum");
 		if (isnull) {
-      // elog(LOG, "[KARTICAM] nodeSeqScan.c isnull set to true");
 			continue;
     }
 
-    // elog(LOG, "[KARTICAM] nodeSeqScan.c before hashvalue");
 		hashvalue = DatumGetUInt32(hashdatum);
-    // elog(LOG, "[KARTICAM] nodeSeqScan.c after hashvalue");
 
-    // elog(LOG, "[KARTICAM] nodeSeqScan.c before bloom_lacks_element if");
 		if (!bloom_lacks_element(node->lipBloomFilter,
 								 (unsigned char *) &hashvalue,
 								 sizeof(uint32))) {
-      // elog(LOG, "[KARTICAM] nodeSeqScan.c after bloom_lacks_element if");
+      // elog(LOG, "[karticam] Bloom filter passed element");
       return slot;
+    }
+    else {
+      // elog(LOG, "[karticam] Bloom filter rejected element");
     }
 			
 	}
-  // elog(LOG, "[KARTICAM] nodeSeqScan.c exitted while loop");
 
 	return NULL;
 }

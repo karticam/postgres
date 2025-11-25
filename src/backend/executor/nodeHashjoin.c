@@ -1001,9 +1001,6 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 		 * shape matches our prototype: single inner equi-hash join with a
 		 * sequential outer scan and no parallelism.
 		 */
-    // fprintf(stderr, "[KARTICAM] checkpoint here V3: %d\n", 932);
-    // fflush(stderr);
-    // elog(LOG, "[KARTICAM] checkpoint here V3: %d", 934);
 
 		if (IsUnderPostmaster && !IsBootstrapProcessingMode() &&
 	      !IsInitProcessingMode() &&
@@ -1015,8 +1012,7 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 			hashstate->parallel_state == NULL &&
 			IsA(outerPlanState(hjstate), SeqScanState))
 		{
-	      // fprintf(stderr, "[KARTICAM] inside the if statement: %d\n", 946);
-	      // fflush(stderr);
+	    elog(LOG, "[karticam] Using bloom filter");
 			SeqScanState *seqstate = castNode(SeqScanState,
 										  outerPlanState(hjstate));
 			List	   *seq_hashkeys;
@@ -1052,8 +1048,6 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 			hjstate->hj_BloomTotalElems = total_elems;
 			hashstate->outer_bloom_filter = NULL;
 		}
-    // fprintf(stderr, "[KARTICAM] exitted from the if statement: %d\n", 979);
-    // fflush(stderr);
 
 		/*
 		 * Set up the skew table hash function while we have a record of the
@@ -1184,10 +1178,6 @@ HashJoinDisableBloomFilter(HashJoinState *hjstate)
 
 	if (!hjstate->hj_BloomEnabled)
 		return;
-        
-	// elog(LOG, "[BLOOM] Disabling bloom filter %p at %s:%d, InEndHashJoin=%d", 
-  //            (void*)hjstate->hj_BloomFilter, __FILE__, __LINE__, 
-  //            hjstate->hj_InEndHashJoin);
 
 	/* Detach from the SeqScan */
 	if (hjstate->hj_BloomOuterSeq != NULL)
