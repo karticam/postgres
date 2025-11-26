@@ -46,3 +46,4 @@ lib*.pc
 
 .vscode/
 *.log
+*.csv
