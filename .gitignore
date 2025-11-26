@@ -47,3 +47,6 @@ lib*.pc
 .vscode/
 *.log
 *.csv
+/build
+logfile
+compile_commands.json
