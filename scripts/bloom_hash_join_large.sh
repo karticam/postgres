@@ -4,10 +4,11 @@ set -e
 PGDATA="$HOME/pgdata"
 DBNAME="cp1db"
 
-QUERY="EXPLAIN (ANALYZE, BUFFERS) SELECT f.id, f.payload AS fact_payload, d.payload AS dim_payload FROM fact2 f JOIN dim2 d ON f.id = d.id;"
+SET_CMD="SET max_parallel_workers_per_gather = 0;"
+QUERY="EXPLAIN (ANALYZE, TIMING ON, SUMMARY ON) SELECT COUNT(fval) FROM fact JOIN dim USING (id) WHERE dval < 'a';"
 
-CSV_FILE="execution_times_small.csv"
-PLOT_SCRIPT="plot_small.py"
+CSV_FILE="execution_times_large.csv"
+PLOT_SCRIPT="plot_times_large.py"
 
 echo "run,branch,planning_ms,execution_ms" > $CSV_FILE
 
@@ -51,10 +52,10 @@ run_branch() {
 
     git checkout -q "$branch"
 
-    echo "⚙️ Building Postgres..."
+    echo "⚙️  Building Postgres (make -j8 && make install)..."
     make -j8 > /dev/null
     make install > /dev/null
-    echo "   ✓ Build done"
+    echo "   ✓ Build complete"
 
     # Start server for this branch
     start_pg
@@ -62,8 +63,12 @@ run_branch() {
     echo "🏁 Running benchmark for $branch"
     for i in {1..10}; do
         echo "   → Run #$i"
-        
-        RAW=$(psql -d "$DBNAME" -X -A -t -c "$QUERY")
+
+        RAW=$(psql -d "$DBNAME" -X -A -t <<EOF
+$SET_CMD;
+$QUERY;
+EOF
+        )
 
         PLAN=$(extract_planning "$RAW")
         EXEC=$(extract_execution "$RAW")
@@ -76,44 +81,18 @@ run_branch() {
         echo "$i,$branch,$PLAN,$EXEC" >> "$CSV_FILE"
     done
 
+    # Stop server for this branch
     stop_pg
 }
 
 # ----------------------------------------
-# Run both branches
+# Run benchmarks
 # ----------------------------------------
 
+# 1. Base branch (LIP)
 run_branch "karticam_aarryas/lip"
+
+# 2. Modified branch (cp1)
 run_branch "cp1"
 
 echo "📄 CSV saved to $CSV_FILE"
-
-# ----------------------------------------
-# Plot
-# ----------------------------------------
-cat << 'EOF' > $PLOT_SCRIPT
-import pandas as pd
-import matplotlib.pyplot as plt
-
-df = pd.read_csv("execution_times_small.csv")
-
-lip = df[df['branch'] == 'karticam_aarryas/lip']
-cp1 = df[df['branch'] == 'cp1']
-
-plt.figure(figsize=(10,6))
-plt.plot(lip['run'], lip['execution_ms'], marker='o', label="LIP (10 runs)")
-plt.plot(cp1['run'], cp1['execution_ms'], marker='o', label="cp1 (10 runs)")
-
-plt.xlabel("Run #")
-plt.ylabel("Execution Time (ms)")
-plt.title("Small Bloom Join Benchmark — LIP vs cp1 (warm cache, per-branch restart)")
-plt.legend()
-plt.grid(True)
-
-plt.savefig("benchmark_small.png")
-print("Plot saved as benchmark_small.png")
-EOF
-
-python3 $PLOT_SCRIPT
-
-echo "🎉 Benchmark completed successfully!"

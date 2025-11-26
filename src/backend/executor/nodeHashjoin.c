@@ -1049,7 +1049,7 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 			hashstate->outer_bloom_filter = NULL;
 		}
     else {
-      elog(LOG, "Without bloom filter");
+      elog(LOG, "[karticam] Without bloom filter");
     }
 
 		/*

@@ -50,3 +50,4 @@ lib*.pc
 /build
 logfile
 compile_commands.json
+/script
