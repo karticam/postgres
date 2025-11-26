@@ -1048,6 +1048,9 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 			hjstate->hj_BloomTotalElems = total_elems;
 			hashstate->outer_bloom_filter = NULL;
 		}
+    else {
+      elog(LOG, "Without bloom filter");
+    }
 
 		/*
 		 * Set up the skew table hash function while we have a record of the

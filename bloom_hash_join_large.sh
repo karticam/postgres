@@ -8,7 +8,7 @@ SET_CMD="SET max_parallel_workers_per_gather = 0;"
 QUERY="EXPLAIN (ANALYZE, TIMING OFF, SUMMARY ON) SELECT COUNT(fval) FROM fact JOIN dim USING (id) WHERE dval < 'a';"
 
 CSV_FILE="execution_times_large.csv"
-PLOT_SCRIPT="plot_times.py"
+PLOT_SCRIPT="plot_times_large.py"
 
 echo "run,branch,planning_ms,execution_ms" > $CSV_FILE
 
@@ -72,6 +72,8 @@ EOF
 
         PLAN=$(extract_planning "$RAW")
         EXEC=$(extract_execution "$RAW")
+
+        echo "Raw output: \n$RAW"
 
         echo "      Planning:  $PLAN ms"
         echo "      Execution: $EXEC ms"

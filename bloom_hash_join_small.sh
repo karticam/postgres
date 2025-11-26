@@ -68,6 +68,8 @@ run_branch() {
         PLAN=$(extract_planning "$RAW")
         EXEC=$(extract_execution "$RAW")
 
+        echo "Raw output: \n$RAW"
+
         echo "      Planning:  $PLAN ms"
         echo "      Execution: $EXEC ms"
 
