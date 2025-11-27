@@ -1382,9 +1382,6 @@ ExecHashJoinNewBatch(HashJoinState *hjstate)
 
 		if (hjstate->hj_BloomOuterSeq != NULL)
 			SeqScanDetachBloomFilter(hjstate->hj_BloomOuterSeq);
-		if (hjstate->hj_BloomFilter != NULL)
-			bloom_free(hjstate->hj_BloomFilter);
-		hjstate->hj_BloomFilter = NULL;
 		if (hashstate != NULL)
 			hashstate->outer_bloom_filter = NULL;
 	}
@@ -1499,36 +1496,6 @@ ExecHashJoinNewBatch(HashJoinState *hjstate)
 		 */
 			BufFileClose(innerFile);
 		hashtable->innerBatchFile[curbatch] = NULL;
-	}
-
-	/*
-	 * Build a fresh bloom filter for this batch, sized from the inner batch
-	 * cardinality and using a fixed k=3 to keep probes cache-friendly.
-	 */
-	if (hjstate->hj_BloomEnabled && hjstate->hj_BloomOuterSeq != NULL)
-	{
-		uint64		size_bytes;
-		bloom_filter *filter;
-		MemoryContext oldcxt;
-		HashState  *hashstate = castNode(HashState, innerPlanState(hjstate));
-
-		size_bytes = hashtable->totalTuples;
-		if (size_bytes < 1)
-			size_bytes = 1;
-		if (size_bytes > (UINT64CONST(1) << 29))
-			size_bytes = (UINT64CONST(1) << 29);
-
-		oldcxt = MemoryContextSwitchTo(hjstate->js.ps.state->es_query_cxt);
-		filter = bloom_create_with_params(size_bytes, 3, 0);
-		MemoryContextSwitchTo(oldcxt);
-
-		hjstate->hj_BloomFilter = filter;
-		if (hashstate != NULL)
-			hashstate->outer_bloom_filter = filter;
-
-		SeqScanAttachBloomFilter(hjstate->hj_BloomOuterSeq,
-								 filter,
-								 hjstate->hj_BloomOuterSeq->lipBloomHashExpr);
 	}
 
 	/*
