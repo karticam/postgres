@@ -101,6 +101,7 @@
 #include "utils/ps_status.h"
 #include "utils/rls.h"
 #include "utils/xml.h"
+#include "executor/nodeHashjoin.h"
 
 #ifdef TRACE_SYNCSCAN
 #include "access/syncscan.h"

@@ -28,6 +28,10 @@ extern void ExecHashJoinReInitializeDSM(HashJoinState *state, ParallelContext *p
 extern void ExecHashJoinInitializeWorker(HashJoinState *state,
 										 ParallelWorkerContext *pwcxt);
 
+extern bool enable_bloom_filter;
+extern double bloom_filter_multiplier;
+extern int bloom_filter_hash_functions;
+
 extern void ExecHashJoinSaveTuple(MinimalTuple tuple, uint32 hashvalue,
 								  BufFile **fileptr, HashJoinTable hashtable);
 
