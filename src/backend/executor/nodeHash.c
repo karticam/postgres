@@ -301,7 +301,18 @@ MultiExecParallelHash(HashState *node)
 																	 &isnull));
 
 				if (!isnull)
+				{
+					if (pstate->bloom_filter != InvalidDsaPointer)
+					{
+						bloom_filter *filter = dsa_get_address(hashtable->area,
+															   pstate->bloom_filter);
+
+						bloom_add_element(filter, (unsigned char *) &hashvalue,
+										  sizeof(uint32));
+					}
+
 					ExecParallelHashTableInsert(hashtable, slot, hashvalue);
+				}
 				hashtable->partialTuples++;
 			}
 
@@ -3447,6 +3458,13 @@ ExecHashTableDetach(HashJoinTable hashtable)
 			{
 				dsa_free(hashtable->area, pstate->batches);
 				pstate->batches = InvalidDsaPointer;
+			}
+			if (DsaPointerIsValid(pstate->bloom_filter))
+			{
+				dsa_free(hashtable->area, pstate->bloom_filter);
+				pstate->bloom_filter = InvalidDsaPointer;
+				pstate->bloom_filter_bytes = 0;
+				pstate->bloom_epoch = 0;
 			}
 		}
 	}

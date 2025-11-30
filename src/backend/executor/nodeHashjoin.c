@@ -174,6 +174,7 @@
 #include "nodes/nodeFuncs.h"
 #include "optimizer/optimizer.h"
 #include "parser/parsetree.h"
+#include "utils/dsa.h"
 #include "utils/lsyscache.h"
 #include "utils/sharedtuplestore.h"
 #include "utils/wait_event.h"
@@ -185,6 +186,13 @@ typedef struct BloomSeqHashkeyContext
 
 static Node *BloomRemapOuterVars(Node *node, void *context);
 static List *BuildSeqscanBloomHashkeys(List *hashkeys, Plan *outer_plan);
+static bloom_filter *HashJoinInitLocalBloomFilter(HashJoinState *hjstate);
+static bloom_filter *HashJoinInitSharedBloomFilter(HashJoinState *hjstate,
+												   HashJoinTable hashtable);
+static void HashJoinFreeLocalBloomFilter(HashJoinState *hjstate);
+static void HashJoinSetupBloomFilter(HashJoinState *hjstate,
+									 HashState *hashNode,
+									 HashJoinTable hashtable);
 
 static Node *
 BloomRemapOuterVars(Node *node, void *context)
@@ -340,27 +348,6 @@ ExecHashJoinImpl(PlanState *pstate, bool parallel)
 				 */
 				Assert(hashtable == NULL);
 
-			if (node->hj_BloomEnabled && node->hj_BloomTotalElems > 0)
-			{
-				MemoryContext oldcxt;
-				bloom_filter *filter;
-
-					if (node->hj_BloomFilter != NULL)
-						bloom_free(node->hj_BloomFilter);
-
-					oldcxt = MemoryContextSwitchTo(node->js.ps.state->es_query_cxt);
-					/* Size in bytes equals estimated inner rows; use fixed k=3. */
-					filter = bloom_create_with_params(node->hj_BloomTotalElems,
-													  3,
-													  0);
-					MemoryContextSwitchTo(oldcxt);				
-					
-					// elog(LOG, "[BLOOM] Created new bloom filter %p at %s:%d", (void*)filter, __FILE__, __LINE__);
-					node->hj_BloomFilter = filter;
-					hashNode->outer_bloom_filter = filter;			}
-			else
-				hashNode->outer_bloom_filter = NULL;
-
 				/*
 				 * If the outer relation is completely empty, and it's not
 				 * right/right-anti/full join, we can quit without building
@@ -424,6 +411,11 @@ ExecHashJoinImpl(PlanState *pstate, bool parallel)
 				 */
 				hashtable = ExecHashTableCreate(hashNode);
 				node->hj_HashTable = hashtable;
+
+				if (node->hj_BloomEnabled && node->hj_BloomTotalElems > 0)
+					HashJoinSetupBloomFilter(node, hashNode, hashtable);
+				else
+					hashNode->outer_bloom_filter = NULL;
 
 				/*
 				 * Execute the Hash node, to build the hash table.  If using
@@ -1006,10 +998,10 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 	      !IsInitProcessingMode() &&
 	      node->join.jointype == JOIN_INNER &&
 			list_length(node->hashkeys) == 1 &&
-			!node->join.plan.parallel_aware &&
-			!outerNode->parallel_aware &&
-			!hashNode->plan.parallel_aware &&
-			hashstate->parallel_state == NULL &&
+			/*
+			 * We now support parallel bloom filters!
+			 * Removed checks for !parallel_aware and parallel_state == NULL.
+			 */
 			IsA(outerPlanState(hjstate), SeqScanState))
 		{
 	    elog(LOG, "[karticam] Using bloom filter");
@@ -1046,6 +1038,8 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 			hjstate->hj_BloomOuterSeq = seqstate;
 			hjstate->hj_BloomEnabled = true;
 			hjstate->hj_BloomTotalElems = total_elems;
+			hjstate->hj_BloomShared = false;
+			hjstate->hj_BloomEpoch = 0;
 			hashstate->outer_bloom_filter = NULL;
 		}
     else {
@@ -1093,6 +1087,8 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 	hjstate->hj_JoinState = HJ_BUILD_HASHTABLE;
 	hjstate->hj_MatchedOuter = false;
 	hjstate->hj_OuterNotEmpty = false;
+	hjstate->hj_BloomShared = false;
+	hjstate->hj_BloomEpoch = 0;
 
 	/* initialize instrumentation counters */
 	hjstate->hj_hash_probe_count = 0;
@@ -1131,22 +1127,36 @@ ExecEndHashJoin(HashJoinState *node)
 
 	if (node->hj_BloomFilter != NULL)
 	{
-		uint64 inserts = bloom_get_insert_count(node->hj_BloomFilter);
-		uint64 scans = bloom_get_scan_count(node->hj_BloomFilter);
-		uint64 rejects = bloom_get_reject_count(node->hj_BloomFilter);
-		uint64 passes = bloom_get_pass_count(node->hj_BloomFilter);
+		/*
+		 * If the bloom filter is shared, it resides in DSA memory.
+		 * By the time ExecEndHashJoin is called, the DSA area might have been
+		 * detached/destroyed (e.g., in ExecHashTableDetach).
+		 * Accessing it here would cause a crash (segfault or invalid pointer).
+		 * Since DSA memory is freed automatically, we just clear the pointer.
+		 */
+		if (node->hj_BloomShared)
+		{
+			node->hj_BloomFilter = NULL;
+		}
+		else
+		{
+			uint64 inserts = bloom_get_insert_count(node->hj_BloomFilter);
+			uint64 scans = bloom_get_scan_count(node->hj_BloomFilter);
+			uint64 rejects = bloom_get_reject_count(node->hj_BloomFilter);
+			uint64 passes = bloom_get_pass_count(node->hj_BloomFilter);
 
-		elog(LOG, "HashJoin bloom stats: inserts=%llu scans=%llu rejects=%llu passes=%llu hash_probes=%llu nbuckets=%d",
-				(unsigned long long) inserts,
-				(unsigned long long) scans,
-				(unsigned long long) rejects,
-				(unsigned long long) passes,
-				(unsigned long long) probes,
-				nbuckets);
+			elog(LOG, "HashJoin bloom stats: inserts=%llu scans=%llu rejects=%llu passes=%llu hash_probes=%llu nbuckets=%d",
+					(unsigned long long) inserts,
+					(unsigned long long) scans,
+					(unsigned long long) rejects,
+					(unsigned long long) passes,
+					(unsigned long long) probes,
+					nbuckets);
 
-		/* Now we can safely free the bloom filter */
-		bloom_free(node->hj_BloomFilter);
-		node->hj_BloomFilter = NULL;
+			/* Now we can safely free the bloom filter */
+			bloom_free(node->hj_BloomFilter);
+			node->hj_BloomFilter = NULL;
+		}
 	} else {
 		elog(LOG, "HashJoin stats (no bloom): hash_probes=%llu nbuckets=%d",
 				(unsigned long long) probes,
@@ -1192,14 +1202,118 @@ HashJoinDisableBloomFilter(HashJoinState *hjstate)
 		hashstate->outer_bloom_filter = NULL;
 
 	/* In ExecEndHashJoin we want to keep the bloom filter around for stats */
-  if (hjstate->hj_BloomFilter != NULL && hjstate->hj_InEndHashJoin)
+  if (hjstate->hj_BloomFilter != NULL && hjstate->hj_InEndHashJoin &&
+	  !hjstate->hj_BloomShared)
   {
       bloom_free(hjstate->hj_BloomFilter);
       hjstate->hj_BloomFilter = NULL;
   }
+  if (hjstate->hj_BloomShared)
+	  hjstate->hj_BloomFilter = NULL;
   hjstate->hj_BloomEnabled = false;
 	hjstate->hj_BloomOuterSeq = NULL;
 	hjstate->hj_BloomTotalElems = 0;
+	if (!hjstate->hj_BloomShared)
+		hjstate->hj_BloomEpoch = 0;
+	hjstate->hj_BloomShared = false;
+}
+
+static void
+HashJoinFreeLocalBloomFilter(HashJoinState *hjstate)
+{
+	if (hjstate->hj_BloomFilter != NULL && !hjstate->hj_BloomShared)
+	{
+		bloom_free(hjstate->hj_BloomFilter);
+		hjstate->hj_BloomFilter = NULL;
+	}
+}
+
+static bloom_filter *
+HashJoinInitLocalBloomFilter(HashJoinState *hjstate)
+{
+	MemoryContext oldcxt;
+	bloom_filter *filter;
+
+	oldcxt = MemoryContextSwitchTo(hjstate->js.ps.state->es_query_cxt);
+	filter = bloom_create_with_params(hjstate->hj_BloomTotalElems, 3, 0);
+	MemoryContextSwitchTo(oldcxt);
+
+	hjstate->hj_BloomShared = false;
+	hjstate->hj_BloomEpoch = 0;
+
+	return filter;
+}
+
+static bloom_filter *
+HashJoinInitSharedBloomFilter(HashJoinState *hjstate,
+							  HashJoinTable hashtable)
+{
+	ParallelHashJoinState *pstate = hashtable->parallel_state;
+	dsa_area   *area = hashtable->area;
+	bloom_filter *filter;
+	Size		memsize;
+
+	if (pstate == NULL || area == NULL)
+		return HashJoinInitLocalBloomFilter(hjstate);
+
+	memsize = bloom_get_memory_size(hjstate->hj_BloomTotalElems);
+
+	LWLockAcquire(&pstate->lock, LW_EXCLUSIVE);
+
+	if (!DsaPointerIsValid(pstate->bloom_filter) ||
+		pstate->bloom_filter_bytes != memsize)
+	{
+		dsa_pointer handle;
+
+		if (DsaPointerIsValid(pstate->bloom_filter))
+			dsa_free(area, pstate->bloom_filter);
+
+		handle = dsa_allocate0(area, memsize);
+		filter = bloom_create_in_place(dsa_get_address(area, handle),
+									   memsize,
+									   hjstate->hj_BloomTotalElems,
+									   3, 0,
+									   true);
+		pstate->bloom_filter = handle;
+		pstate->bloom_filter_bytes = memsize;
+		pstate->bloom_epoch = 0;
+	}
+	else
+	{
+		filter = (bloom_filter *) dsa_get_address(area,
+												  pstate->bloom_filter);
+	}
+
+	if (hjstate->hj_BloomEpoch == pstate->bloom_epoch)
+	{
+		bloom_reset(filter);
+		pstate->bloom_epoch++;
+	}
+
+	hjstate->hj_BloomEpoch = pstate->bloom_epoch;
+	hjstate->hj_BloomShared = true;
+
+	LWLockRelease(&pstate->lock);
+
+	return filter;
+}
+
+static void
+HashJoinSetupBloomFilter(HashJoinState *hjstate,
+						 HashState *hashNode,
+						 HashJoinTable hashtable)
+{
+	bloom_filter *filter;
+
+	HashJoinFreeLocalBloomFilter(hjstate);
+
+	if (hashtable->parallel_state != NULL)
+		filter = HashJoinInitSharedBloomFilter(hjstate, hashtable);
+	else
+		filter = HashJoinInitLocalBloomFilter(hjstate);
+
+	hjstate->hj_BloomFilter = filter;
+	hashNode->outer_bloom_filter = filter;
 }
 
 /*
@@ -1522,6 +1636,18 @@ ExecParallelHashJoinNewBatch(HashJoinState *hjstate)
 	HashJoinTable hashtable = hjstate->hj_HashTable;
 	int			start_batchno;
 	int			batchno;
+
+	/*
+	 * If bloom filter is active, detach it before starting a new batch.
+	 * We currently only support bloom filters for the first batch (Batch 0).
+	 * Reusing it for later batches would require complex synchronization and
+	 * repopulation, and using the stale Batch 0 filter would cause data loss.
+	 */
+	if (hjstate->hj_BloomEnabled)
+	{
+		if (hjstate->hj_BloomOuterSeq != NULL)
+			SeqScanDetachBloomFilter(hjstate->hj_BloomOuterSeq);
+	}
 
 	/*
 	 * If we were already attached to a batch, remember not to bother checking
@@ -1936,6 +2062,9 @@ ExecHashJoinInitializeDSM(HashJoinState *state, ParallelContext *pcxt)
 	pstate->nbuckets = 0;
 	pstate->growth = PHJ_GROWTH_OK;
 	pstate->chunk_work_queue = InvalidDsaPointer;
+	pstate->bloom_filter = InvalidDsaPointer;
+	pstate->bloom_filter_bytes = 0;
+	pstate->bloom_epoch = 0;
 	pg_atomic_init_u32(&pstate->distributor, 0);
 	pstate->nparticipants = pcxt->nworkers + 1;
 	pstate->total_tuples = 0;
@@ -1992,6 +2121,9 @@ ExecHashJoinReInitializeDSM(HashJoinState *state, ParallelContext *pcxt)
 
 	/* Clear any shared batch files. */
 	SharedFileSetDeleteAll(&pstate->fileset);
+	pstate->bloom_filter = InvalidDsaPointer;
+	pstate->bloom_filter_bytes = 0;
+	pstate->bloom_epoch = 0;
 
 	/* Reset build_barrier to PHJ_BUILD_ELECT so we can go around again. */
 	BarrierInit(&pstate->build_barrier, 0);

@@ -37,6 +37,7 @@
 
 #include "common/hashfn.h"
 #include "lib/bloomfilter.h"
+#include "port/atomics.h"
 #include "port/pg_bitutils.h"
 
 #define MAX_HASH_FUNCS		10
@@ -48,12 +49,15 @@ struct bloom_filter
 	uint64		seed;
 	/* m is bitset size, in bits.  Must be a power of two <= 2^32.  */
 	uint64		m;
+	uint32		bitset_bytes;	/* logical size in bytes (m / 8) */
+	uint32		bitset_words;	/* physical storage in uint32 words */
+	bool		shared;			/* true if filter lives in shared memory */
 	/* instrumentation counters */
-	uint64		insert_count;
-	uint64		scan_count;    /* number of membership tests */
-	uint64		reject_count;  /* bloom_lacks_element returned true */
-	uint64		pass_count;    /* bloom_lacks_element returned false */
-	unsigned char bitset[FLEXIBLE_ARRAY_MEMBER];
+	pg_atomic_uint64 insert_count;
+	pg_atomic_uint64 scan_count; /* number of membership tests */
+	pg_atomic_uint64 reject_count;	/* bloom_lacks_element returned true */
+	pg_atomic_uint64 pass_count;	/* bloom_lacks_element returned false */
+	uint32		bitset[FLEXIBLE_ARRAY_MEMBER];
 };
 
 static int	my_bloom_power(uint64 target_bitset_bits);
@@ -61,6 +65,17 @@ static int	optimal_k(uint64 bitset_bits, int64 total_elems);
 static void k_hashes(bloom_filter *filter, uint32 *hashes, unsigned char *elem,
 					 size_t len);
 static inline uint32 mod_m(uint32 val, uint64 m);
+static void bloom_compute_layout_from_size(uint64 size_bytes,
+										   uint64 *bitset_bits,
+										   uint32 *bitset_bytes,
+										   uint32 *bitset_words);
+static bloom_filter *bloom_init_common(void *space, Size space_size,
+									   uint64 bitset_bits,
+									   uint32 bitset_bytes,
+									   uint32 bitset_words,
+									   int k_hash_funcs,
+									   uint64 seed,
+									   bool shared);
 
 /*
  * Create Bloom filter in caller's memory context.  We aim for a false positive
@@ -91,10 +106,12 @@ static inline uint32 mod_m(uint32 val, uint64 m);
 bloom_filter *
 bloom_create(int64 total_elems, int bloom_work_mem, uint64 seed)
 {
-	bloom_filter *filter;
 	int			bloom_power;
 	uint64		bitset_bytes;
 	uint64		bitset_bits;
+	uint32		bitset_words;
+	Size		memsize;
+	bloom_filter *filter;
 
 	/*
 	 * Aim for two bytes per element; this is sufficient to get a false
@@ -104,24 +121,28 @@ bloom_create(int64 total_elems, int bloom_work_mem, uint64 seed)
 	 * false positive rate still won't exceed 2% in almost all cases.
 	 */
 	bitset_bytes = Min(bloom_work_mem * UINT64CONST(1024), total_elems * 2);
-	bitset_bytes = Max(1024 * 1024, bitset_bytes);
+	bitset_bytes = Max(UINT64CONST(1024) * 1024, bitset_bytes);
 
 	/*
 	 * Size in bits should be the highest power of two <= target.  bitset_bits
-	 * is uint64 because PG_UINT32_MAX is 2^32 - 1, not 2^32
+	 * is uint64 because PG_UINT32_MAX is 2^32 - 1, not 2^32.
 	 */
 	bloom_power = my_bloom_power(bitset_bytes * BITS_PER_BYTE);
 	bitset_bits = UINT64CONST(1) << bloom_power;
 	bitset_bytes = bitset_bits / BITS_PER_BYTE;
+	bitset_words = (uint32) ((bitset_bytes + sizeof(uint32) - 1) /
+							 sizeof(uint32));
+	memsize = offsetof(bloom_filter, bitset) +
+		sizeof(uint32) * bitset_words;
+	filter = palloc(memsize);
 
-	/* Allocate bloom filter with unset bitset */
-	filter = palloc0(offsetof(bloom_filter, bitset) +
-					 sizeof(unsigned char) * bitset_bytes);
-	filter->k_hash_funcs = optimal_k(bitset_bits, total_elems);
-	filter->seed = seed;
-	filter->m = bitset_bits;
-
-	return filter;
+	return bloom_init_common(filter, memsize,
+							 bitset_bits,
+							 (uint32) bitset_bytes,
+							 bitset_words,
+							 optimal_k(bitset_bits, total_elems),
+							 seed,
+							 false);
 }
 
 /*
@@ -133,11 +154,120 @@ bloom_create(int64 total_elems, int bloom_work_mem, uint64 seed)
 bloom_filter *
 bloom_create_with_params(uint64 size_bytes, int k_hash_funcs, uint64 seed)
 {
-	bloom_filter *filter;
 	uint64		bitset_bits;
-	uint64		bitset_bytes;
+	uint32		bitset_bytes;
+	uint32		bitset_words;
+	Size		memsize;
+	bloom_filter *filter;
+
+	bloom_compute_layout_from_size(size_bytes, &bitset_bits,
+								   &bitset_bytes, &bitset_words);
+
+	memsize = offsetof(bloom_filter, bitset) +
+		sizeof(uint32) * bitset_words;
+	filter = palloc(memsize);
+
+	return bloom_init_common(filter, memsize,
+							 bitset_bits,
+							 bitset_bytes,
+							 bitset_words,
+							 k_hash_funcs,
+							 seed,
+							 false);
+}
+
+Size
+bloom_get_memory_size(uint64 size_bytes)
+{
+	uint64		bitset_bits;
+	uint32		bitset_bytes;
+	uint32		bitset_words;
+
+	bloom_compute_layout_from_size(size_bytes, &bitset_bits,
+								   &bitset_bytes, &bitset_words);
+
+	return offsetof(bloom_filter, bitset) +
+		sizeof(uint32) * bitset_words;
+}
+
+bloom_filter *
+bloom_create_in_place(void *space, Size space_size, uint64 size_bytes,
+					  int k_hash_funcs, uint64 seed, bool shared)
+{
+	uint64		bitset_bits;
+	uint32		bitset_bytes;
+	uint32		bitset_words;
+	Size		memsize;
+
+	bloom_compute_layout_from_size(size_bytes, &bitset_bits,
+								   &bitset_bytes, &bitset_words);
+	memsize = offsetof(bloom_filter, bitset) +
+		sizeof(uint32) * bitset_words;
+
+	if (space_size < memsize)
+		elog(ERROR, "insufficient space for bloom filter");
+
+	return bloom_init_common(space, memsize,
+							 bitset_bits,
+							 bitset_bytes,
+							 bitset_words,
+							 k_hash_funcs,
+							 seed,
+							 shared);
+}
+
+void
+bloom_reset(bloom_filter *filter)
+{
+	Size		storage_bytes = (Size) filter->bitset_words * sizeof(uint32);
+
+	memset(filter->bitset, 0, storage_bytes);
+	pg_atomic_write_u64(&filter->insert_count, 0);
+	pg_atomic_write_u64(&filter->scan_count, 0);
+	pg_atomic_write_u64(&filter->reject_count, 0);
+	pg_atomic_write_u64(&filter->pass_count, 0);
+}
+
+static bloom_filter *
+bloom_init_common(void *space, Size space_size,
+				  uint64 bitset_bits,
+				  uint32 bitset_bytes,
+				  uint32 bitset_words,
+				  int k_hash_funcs,
+				  uint64 seed,
+				  bool shared)
+{
+	Size		storage_bytes = sizeof(uint32) * bitset_words;
+	Size		required = offsetof(bloom_filter, bitset) + storage_bytes;
+	bloom_filter *filter = (bloom_filter *) space;
 	int			k;
 
+	if (space_size < required)
+		elog(ERROR, "insufficient space for bloom filter");
+
+	MemSet(filter, 0, required);
+
+	k = Max(1, Min(k_hash_funcs, MAX_HASH_FUNCS));
+	filter->k_hash_funcs = k;
+	filter->seed = seed;
+	filter->m = bitset_bits;
+	filter->bitset_bytes = bitset_bytes;
+	filter->bitset_words = bitset_words;
+	filter->shared = shared;
+	pg_atomic_init_u64(&filter->insert_count, 0);
+	pg_atomic_init_u64(&filter->scan_count, 0);
+	pg_atomic_init_u64(&filter->reject_count, 0);
+	pg_atomic_init_u64(&filter->pass_count, 0);
+
+	return filter;
+}
+
+static void
+bloom_compute_layout_from_size(uint64 size_bytes,
+							   uint64 *bitset_bits,
+							   uint32 *bitset_bytes,
+							   uint32 *bitset_words)
+{
 	/* enforce at least one byte and clamp to power-of-two bits <= 2^32 */
 	if (size_bytes < 1)
 		size_bytes = 1;
@@ -145,18 +275,12 @@ bloom_create_with_params(uint64 size_bytes, int k_hash_funcs, uint64 seed)
 	if (size_bytes > (UINT64CONST(1) << 29))
 		size_bytes = (UINT64CONST(1) << 29);
 
-	bitset_bits = UINT64CONST(1) << my_bloom_power(size_bytes * BITS_PER_BYTE);
-	bitset_bytes = bitset_bits / BITS_PER_BYTE;
-
-	k = Max(1, Min(k_hash_funcs, MAX_HASH_FUNCS));
-
-	filter = palloc0(offsetof(bloom_filter, bitset) +
-					 sizeof(unsigned char) * bitset_bytes);
-	filter->k_hash_funcs = k;
-	filter->seed = seed;
-	filter->m = bitset_bits;
-
-	return filter;
+	*bitset_bits = UINT64CONST(1) << my_bloom_power(size_bytes * BITS_PER_BYTE);
+	*bitset_bytes = (uint32) (*bitset_bits / BITS_PER_BYTE);
+	*bitset_words = (uint32) ((*bitset_bytes + sizeof(uint32) - 1) /
+							  sizeof(uint32));
+	if (*bitset_words == 0)
+		*bitset_words = 1;
 }
 
 /*
@@ -165,6 +289,8 @@ bloom_create_with_params(uint64 size_bytes, int k_hash_funcs, uint64 seed)
 void
 bloom_free(bloom_filter *filter)
 {
+	if (filter->shared)
+		return;
 	pfree(filter);
 }
 
@@ -176,17 +302,24 @@ bloom_add_element(bloom_filter *filter, unsigned char *elem, size_t len)
 {
 	uint32		hashes[MAX_HASH_FUNCS];
 	int			i;
+	uint32	   *words = filter->bitset;
+	pg_atomic_uint32 *atomic_words = (pg_atomic_uint32 *) filter->bitset;
 
 	k_hashes(filter, hashes, elem, len);
 
-	/* Map a bit-wise address to a byte-wise address + bit offset */
 	for (i = 0; i < filter->k_hash_funcs; i++)
 	{
-		filter->bitset[hashes[i] >> 3] |= 1 << (hashes[i] & 7);
+		uint32		bitno = hashes[i];
+		uint32		word_index = bitno >> 5;
+		uint32		mask = 1U << (bitno & 31);
+
+		if (filter->shared)
+			pg_atomic_fetch_or_u32(&atomic_words[word_index], mask);
+		else
+			words[word_index] |= mask;
 	}
 
-	/* instrument this insertion */
-	filter->insert_count++;
+	pg_atomic_fetch_add_u64(&filter->insert_count, 1);
 }
 
 /*
@@ -201,23 +334,40 @@ bloom_lacks_element(bloom_filter *filter, unsigned char *elem, size_t len)
 {
 	uint32		hashes[MAX_HASH_FUNCS];
 	int			i;
+	uint32	   *words = filter->bitset;
+	pg_atomic_uint32 *atomic_words = (pg_atomic_uint32 *) filter->bitset;
+	bool		reject = false;
 
 	k_hashes(filter, hashes, elem, len);
 
-	/* instrument this membership test */
-	filter->scan_count++;
+	pg_atomic_fetch_add_u64(&filter->scan_count, 1);
 
-	/* Map a bit-wise address to a byte-wise address + bit offset */
 	for (i = 0; i < filter->k_hash_funcs; i++)
 	{
-		if (!(filter->bitset[hashes[i] >> 3] & (1 << (hashes[i] & 7))))
+		uint32		bitno = hashes[i];
+		uint32		word_index = bitno >> 5;
+		uint32		mask = 1U << (bitno & 31);
+		uint32		word;
+
+		if (filter->shared)
+			word = pg_atomic_read_u32(&atomic_words[word_index]);
+		else
+			word = words[word_index];
+
+		if ((word & mask) == 0)
 		{
-			filter->reject_count++;
-			return true;
+			reject = true;
+			break;
 		}
 	}
 
-	filter->pass_count++;
+	if (reject)
+	{
+		pg_atomic_fetch_add_u64(&filter->reject_count, 1);
+		return true;
+	}
+
+	pg_atomic_fetch_add_u64(&filter->pass_count, 1);
 	return false;
 }
 
@@ -236,7 +386,7 @@ bloom_lacks_element(bloom_filter *filter, unsigned char *elem, size_t len)
 double
 bloom_prop_bits_set(bloom_filter *filter)
 {
-	int			bitset_bytes = filter->m / BITS_PER_BYTE;
+	int			bitset_bytes = filter->bitset_bytes;
 	uint64		bits_set = pg_popcount((char *) filter->bitset, bitset_bytes);
 
 	return bits_set / (double) filter->m;
@@ -248,7 +398,7 @@ bloom_get_insert_count(bloom_filter *filter)
 {
 	if (filter == NULL)
 		return 0;
-	return filter->insert_count;
+	return pg_atomic_read_u64(&filter->insert_count);
 }
 
 uint64
@@ -256,7 +406,7 @@ bloom_get_scan_count(bloom_filter *filter)
 {
 	if (filter == NULL)
 		return 0;
-	return filter->scan_count;
+	return pg_atomic_read_u64(&filter->scan_count);
 }
 
 uint64
@@ -264,7 +414,7 @@ bloom_get_reject_count(bloom_filter *filter)
 {
 	if (filter == NULL)
 		return 0;
-	return filter->reject_count;
+	return pg_atomic_read_u64(&filter->reject_count);
 }
 
 uint64
@@ -272,7 +422,7 @@ bloom_get_pass_count(bloom_filter *filter)
 {
 	if (filter == NULL)
 		return 0;
-	return filter->pass_count;
+	return pg_atomic_read_u64(&filter->pass_count);
 }
 
 /*

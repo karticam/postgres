@@ -13,6 +13,8 @@
 #ifndef BLOOMFILTER_H
 #define BLOOMFILTER_H
 
+#include "c.h"
+
 typedef struct bloom_filter bloom_filter;
 
 extern bloom_filter *bloom_create(int64 total_elems, int bloom_work_mem,
@@ -20,7 +22,13 @@ extern bloom_filter *bloom_create(int64 total_elems, int bloom_work_mem,
 extern bloom_filter *bloom_create_with_params(uint64 size_bytes,
 											  int k_hash_funcs,
 											  uint64 seed);
+extern bloom_filter *bloom_create_in_place(void *space, Size space_size,
+										   uint64 size_bytes,
+										   int k_hash_funcs,
+										   uint64 seed, bool shared);
+extern Size bloom_get_memory_size(uint64 size_bytes);
 extern void bloom_free(bloom_filter *filter);
+extern void bloom_reset(bloom_filter *filter);
 extern void bloom_add_element(bloom_filter *filter, unsigned char *elem,
 							  size_t len);
 extern bool bloom_lacks_element(bloom_filter *filter, unsigned char *elem,

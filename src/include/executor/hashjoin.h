@@ -256,6 +256,9 @@ typedef struct ParallelHashJoinState
 	size_t		space_allowed;
 	size_t		total_tuples;	/* total number of inner tuples */
 	LWLock		lock;			/* lock protecting the above */
+	dsa_pointer bloom_filter;	/* shared bloom filter (if any) */
+	Size		bloom_filter_bytes;
+	uint64		bloom_epoch;
 
 	Barrier		build_barrier;	/* synchronization for the build phases */
 	Barrier		grow_batches_barrier;

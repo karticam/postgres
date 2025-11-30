@@ -2282,6 +2282,8 @@ typedef struct HashJoinState
 	SeqScanState *hj_BloomOuterSeq; /* outer seqscan consuming bloom filter */
 	bool		hj_BloomEnabled;	/* true if bloom filter active */
 	int64		hj_BloomTotalElems; /* estimated cardinality for filter */
+	bool		hj_BloomShared;	/* true if bloom filter lives in shared mem */
+	uint64		hj_BloomEpoch;	/* last shared bloom epoch observed */
 	bool		hj_InEndHashJoin;  /* true if we're in ExecEndHashJoin */
 
 	/* instrumentation: number of inner-hashtable tuple inspections during probes */
