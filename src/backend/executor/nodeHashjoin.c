@@ -1041,7 +1041,7 @@ ExecInitHashJoin(HashJoin *node, EState *estate, int eflags)
 		}
 		else
 		{
-			elog(LOG, "[karticam] Without bloom filter");
+			elog(LOG, "[karticam] Without bloom filter (enable_bloom_filter: %d)", enable_bloom_filter);
 		}
 
 		/*
@@ -1234,6 +1234,8 @@ HashJoinInitLocalBloomFilter(HashJoinState *hjstate)
 	bloom_filter *filter;
 
 	oldcxt = MemoryContextSwitchTo(hjstate->js.ps.state->es_query_cxt);
+	elog(LOG, "[karticam] created bloom filter, total elems: %zu, multiplier: %f, hash functions: %d",
+		 hjstate->hj_BloomTotalElems, bloom_filter_multiplier, bloom_filter_hash_functions);
 	filter = bloom_create_with_params(hjstate->hj_BloomTotalElems * bloom_filter_multiplier, bloom_filter_hash_functions, 0);
 	MemoryContextSwitchTo(oldcxt);
 
@@ -1268,6 +1270,8 @@ HashJoinInitSharedBloomFilter(HashJoinState *hjstate,
 			dsa_free(area, pstate->bloom_filter);
 
 		handle = dsa_allocate0(area, memsize);
+		elog(LOG, "[karticam] created bloom filter, total elems: %zu, multiplier: %f, hash functions: %d",
+			 hjstate->hj_BloomTotalElems, bloom_filter_multiplier, bloom_filter_hash_functions);
 		filter = bloom_create_in_place(dsa_get_address(area, handle),
 									   memsize,
 									   hjstate->hj_BloomTotalElems * bloom_filter_multiplier,
