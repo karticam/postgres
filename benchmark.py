@@ -1,3 +1,4 @@
+#!usr/bin/env python3
 import subprocess
 import time
 import os
@@ -25,7 +26,7 @@ BF_HASHES = [1, 2, 3, 4, 5]
 BF_ENABLE_OPTS = ["on", "off"]
 
 DB_NAME = "postgres"
-PGDATA = os.path.expanduser("~/pgdata")
+PGDATA = os.environ.get("PGDATA", os.path.expanduser("~/pgdata"))
 RESULTS_FILE = "benchmark_results.csv"
 LOG_FILE = "benchmark_log.txt"
 

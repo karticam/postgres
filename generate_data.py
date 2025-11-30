@@ -1,7 +1,10 @@
+#!usr/bin/env python3
 import os
 import random
 import subprocess
 import sys
+import time
+import atexit
 
 # --- Configuration ---
 FACT_SIZES = [100_000, 1_000_000, 10_000_000, 100_000_000]
@@ -16,7 +19,36 @@ SELECTIVITIES = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 # DIM_SIZES = [100]
 # SELECTIVITIES = [0.5]
 
+# SELECTIVITIES = [0.5]
+
 DB_NAME = "postgres"
+PGDATA = os.environ.get("PGDATA", os.path.expanduser("~/pgdata"))
+
+def stop_server():
+    print("Stopping server...")
+    subprocess.run(["pg_ctl", "-D", PGDATA, "stop", "-m", "fast"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    time.sleep(1)
+
+def start_server():
+    print("Starting server...")
+    # Check if already running
+    if subprocess.run(["pg_isready", "-q", "-d", DB_NAME], stdout=subprocess.DEVNULL).returncode == 0:
+        print("Server already running.")
+        return False # Did not start it ourselves
+
+    cmd = ["postgres", "-D", PGDATA]
+    # We can let it print to stdout/stderr or redirect. 
+    # For generation, maybe just let it run in background?
+    # benchmark.py captures output. Let's do similar but maybe simpler.
+    
+    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    for _ in range(30):
+        if subprocess.run(["pg_isready", "-q", "-d", DB_NAME], stdout=subprocess.DEVNULL).returncode == 0:
+            return True # Started it ourselves
+        time.sleep(1)
+    
+    raise Exception("Server failed to start")
 
 def run_psql(sql):
     subprocess.run(["psql", "-d", DB_NAME, "-c", sql], check=True)
@@ -83,7 +115,13 @@ def generate_fact_table(fact_rows, dim_rows, selectivity):
     run_psql(sql)
 
 def main():
-    # Check connection
+    # Check connection / Start server
+    server_started_by_us = start_server()
+    
+    if server_started_by_us:
+        atexit.register(stop_server)
+    
+    # Double check connection
     if subprocess.run(["pg_isready", "-q", "-d", DB_NAME], stdout=subprocess.DEVNULL).returncode != 0:
         print("Error: Postgres server is not running. Please start it first.")
         sys.exit(1)
