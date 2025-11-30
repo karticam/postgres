@@ -1234,7 +1234,7 @@ HashJoinInitLocalBloomFilter(HashJoinState *hjstate)
 	bloom_filter *filter;
 
 	oldcxt = MemoryContextSwitchTo(hjstate->js.ps.state->es_query_cxt);
-	filter = bloom_create_with_params(hjstate->hj_BloomTotalElems, 3, 0);
+	filter = bloom_create_with_params(hjstate->hj_BloomTotalElems * bloom_filter_multiplier, bloom_filter_hash_functions, 0);
 	MemoryContextSwitchTo(oldcxt);
 
 	hjstate->hj_BloomShared = false;
@@ -1270,8 +1270,8 @@ HashJoinInitSharedBloomFilter(HashJoinState *hjstate,
 		handle = dsa_allocate0(area, memsize);
 		filter = bloom_create_in_place(dsa_get_address(area, handle),
 									   memsize,
-									   hjstate->hj_BloomTotalElems,
-									   3, 0,
+									   hjstate->hj_BloomTotalElems * bloom_filter_multiplier,
+									   bloom_filter_hash_functions, 0,
 									   true);
 		pstate->bloom_filter = handle;
 		pstate->bloom_filter_bytes = memsize;
