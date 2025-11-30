@@ -8,10 +8,15 @@ FACT_SIZES = [100_000, 1_000_000, 10_000_000, 100_000_000]
 DIM_SIZES = [10_000, 100_000, 1_000_000, 10_000_000]
 SELECTIVITIES = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 
-DB_NAME = "postgres"
+# FACT_SIZES = [1_000_000]
+# DIM_SIZES = [100_000]
+# SELECTIVITIES = [0.5]
 
-def get_random_string():
-    return random.randbytes(4).hex()
+# FACT_SIZES = [1000]
+# DIM_SIZES = [100]
+# SELECTIVITIES = [0.5]
+
+DB_NAME = "postgres"
 
 def run_psql(sql):
     subprocess.run(["psql", "-d", DB_NAME, "-c", sql], check=True)
@@ -30,18 +35,18 @@ def generate_dim_table(dim_rows):
         return
 
     print(f"Generating {table_name}...")
-    filename = f"{table_name}.csv"
     
-    with open(filename, "w") as f:
-        for i in range(dim_rows):
-            f.write(f"{i},{get_random_string()}\n")
-            
-    try:
-        run_psql(f"CREATE TABLE {table_name} (int_value INTEGER PRIMARY KEY, str_value CHAR(8));")
-        run_psql(f"\\copy {table_name} FROM '{filename}' WITH CSV")
-        run_psql(f"ANALYZE {table_name};")
-    finally:
-        if os.path.exists(filename): os.remove(filename)
+    # Use SQL generation for speed
+    # int_value: 0..dim_rows-1
+    # str_value: random 8 chars
+    sql = f"""
+    CREATE UNLOGGED TABLE {table_name} (int_value INTEGER PRIMARY KEY, str_value CHAR(8));
+    INSERT INTO {table_name} (int_value, str_value)
+    SELECT i, substr(md5(random()::text), 1, 8)
+    FROM generate_series(0, {dim_rows} - 1) AS i;
+    ANALYZE {table_name};
+    """
+    run_psql(sql)
 
 def generate_fact_table(fact_rows, dim_rows, selectivity):
     sel_str = str(selectivity).replace('.', '_')
@@ -52,27 +57,30 @@ def generate_fact_table(fact_rows, dim_rows, selectivity):
         return
 
     print(f"Generating {table_name}...")
-    filename = f"{table_name}.csv"
     
     num_matching = int(fact_rows * selectivity)
     num_non_matching = fact_rows - num_matching
     
-    with open(filename, "w") as f:
-        # Matching keys (0 to dim_rows-1)
-        for _ in range(num_matching):
-            key = random.randint(0, dim_rows - 1)
-            f.write(f"{key},{get_random_string()}\n")
-        # Non-matching keys (dim_rows to 2*dim_rows + ...)
-        for _ in range(num_non_matching):
-            key = random.randint(dim_rows, dim_rows * 2 + num_non_matching)
-            f.write(f"{key},{get_random_string()}\n")
-            
-    try:
-        run_psql(f"CREATE TABLE {table_name} (int_value INTEGER, str_value CHAR(8));")
-        run_psql(f"\\copy {table_name} FROM '{filename}' WITH CSV")
-        run_psql(f"ANALYZE {table_name};")
-    finally:
-        if os.path.exists(filename): os.remove(filename)
+    # Use SQL generation
+    # Matching: random(0, dim_rows-1)
+    # Non-Matching: random(dim_rows, 2*dim_rows + ...)
+    
+    sql = f"""
+    CREATE UNLOGGED TABLE {table_name} (int_value INTEGER, str_value CHAR(8));
+    
+    -- Matching rows
+    INSERT INTO {table_name} (int_value, str_value)
+    SELECT floor(random() * {dim_rows})::int, substr(md5(random()::text), 1, 8)
+    FROM generate_series(1, {num_matching});
+    
+    -- Non-matching rows
+    INSERT INTO {table_name} (int_value, str_value)
+    SELECT floor(random() * ({dim_rows} + {num_non_matching}) + {dim_rows})::int, substr(md5(random()::text), 1, 8)
+    FROM generate_series(1, {num_non_matching});
+    
+    ANALYZE {table_name};
+    """
+    run_psql(sql)
 
 def main():
     # Check connection

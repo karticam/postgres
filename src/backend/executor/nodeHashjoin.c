@@ -1257,7 +1257,7 @@ HashJoinInitSharedBloomFilter(HashJoinState *hjstate,
 	if (pstate == NULL || area == NULL)
 		return HashJoinInitLocalBloomFilter(hjstate);
 
-	memsize = bloom_get_memory_size(hjstate->hj_BloomTotalElems);
+	memsize = bloom_get_memory_size(hjstate->hj_BloomTotalElems * bloom_filter_multiplier);
 
 	LWLockAcquire(&pstate->lock, LW_EXCLUSIVE);
 
@@ -1646,7 +1646,7 @@ ExecParallelHashJoinNewBatch(HashJoinState *hjstate)
 	 * Reusing it for later batches would require complex synchronization and
 	 * repopulation, and using the stale Batch 0 filter would cause data loss.
 	 */
-	if (hjstate->hj_BloomEnabled)
+	if (hjstate->hj_BloomEnabled && hashtable->curbatch >= 0)
 	{
 		if (hjstate->hj_BloomOuterSeq != NULL)
 			SeqScanDetachBloomFilter(hjstate->hj_BloomOuterSeq);
@@ -2117,6 +2117,8 @@ void ExecHashJoinReInitializeDSM(HashJoinState *state, ParallelContext *pcxt)
 
 	/* Clear any shared batch files. */
 	SharedFileSetDeleteAll(&pstate->fileset);
+	if (DsaPointerIsValid(pstate->bloom_filter))
+		dsa_free(state->js.ps.state->es_query_dsa, pstate->bloom_filter);
 	pstate->bloom_filter = InvalidDsaPointer;
 	pstate->bloom_filter_bytes = 0;
 	pstate->bloom_epoch = 0;

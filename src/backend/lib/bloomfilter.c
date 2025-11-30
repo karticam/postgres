@@ -319,7 +319,7 @@ bloom_add_element(bloom_filter *filter, unsigned char *elem, size_t len)
 			words[word_index] |= mask;
 	}
 
-	pg_atomic_fetch_add_u64(&filter->insert_count, 1);
+	/* pg_atomic_fetch_add_u64(&filter->insert_count, 1); */
 }
 
 /*
@@ -340,7 +340,7 @@ bloom_lacks_element(bloom_filter *filter, unsigned char *elem, size_t len)
 
 	k_hashes(filter, hashes, elem, len);
 
-	pg_atomic_fetch_add_u64(&filter->scan_count, 1);
+	/* pg_atomic_fetch_add_u64(&filter->scan_count, 1); */
 
 	for (i = 0; i < filter->k_hash_funcs; i++)
 	{
@@ -363,11 +363,11 @@ bloom_lacks_element(bloom_filter *filter, unsigned char *elem, size_t len)
 
 	if (reject)
 	{
-		pg_atomic_fetch_add_u64(&filter->reject_count, 1);
+		/* pg_atomic_fetch_add_u64(&filter->reject_count, 1); */
 		return true;
 	}
 
-	pg_atomic_fetch_add_u64(&filter->pass_count, 1);
+	/* pg_atomic_fetch_add_u64(&filter->pass_count, 1); */
 	return false;
 }
 
