@@ -2,6 +2,8 @@
 import subprocess
 import sys
 import time
+import argparse
+import os
 
 DB_NAME = "postgres"
 
@@ -12,6 +14,14 @@ def run_psql(sql):
     print(f"  Took {time.time() - start:.2f}s")
 
 def main():
+    parser = argparse.ArgumentParser(description="Generate Vondra Data")
+    parser.add_argument("--env", choices=["local", "aws"], default="local", help="Environment to run in")
+    args = parser.parse_args()
+
+    if args.env == "aws":
+        os.environ["PATH"] = "/mnt/pgdata/pg_install/bin:" + os.environ["PATH"]
+        print("Running in AWS mode. Updated PATH.")
+
     # Check if server is running
     if subprocess.run(["pg_isready", "-q", "-d", DB_NAME], stdout=subprocess.DEVNULL).returncode != 0:
         print("Error: Postgres server is not running. Please start it first.")

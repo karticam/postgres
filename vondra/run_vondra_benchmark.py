@@ -9,7 +9,8 @@ import sys
 import argparse
 
 # --- Configuration ---
-PGDATA = os.path.expanduser("~/pgdata")
+# PGDATA will be set in main() based on arguments
+PGDATA = os.path.expanduser("~/pgdata") 
 DB_NAME = "postgres"
 
 # Determine script directory to ensure files are saved in ./vondra
@@ -83,11 +84,24 @@ def run_query(filter_val):
     return exec_time, workers
 
 def main():
+    global PGDATA
+    
     parser = argparse.ArgumentParser(description="Run Vondra Benchmark")
     parser.add_argument("--filter", help="Specific filter criteria to run (e.g. '1', 'a'). If not set, runs all.", default=None)
     parser.add_argument("--runs", type=int, help="Number of runs per configuration", default=10)
     parser.add_argument("--skip-data-check", action="store_true", help="Skip checking/generating data")
+    parser.add_argument("--env", choices=["local", "aws"], default="local", help="Environment to run in (local or aws)")
     args = parser.parse_args()
+
+    # Configure Environment
+    if args.env == "aws":
+        PGDATA = "/mnt/pgdata/data"
+        # Add AWS bin path
+        os.environ["PATH"] = "/mnt/pgdata/pg_install/bin:" + os.environ["PATH"]
+        print(f"Running in AWS mode. PGDATA={PGDATA}")
+    else:
+        PGDATA = os.path.expanduser("~/pgdata")
+        print(f"Running in Local mode. PGDATA={PGDATA}")
 
     filters_to_run = [args.filter] if args.filter else ALL_FILTERS
 
@@ -106,7 +120,8 @@ def main():
             if not check_res.stdout.strip():
                 print("Tables not found. Generating data...")
                 gen_script = os.path.join(SCRIPT_DIR, "generate_vondra_data.py")
-                subprocess.run(["python3", gen_script], check=True)
+                # Pass env to generation script
+                subprocess.run(["python3", gen_script, "--env", args.env], check=True)
             else:
                 print("Tables found. Skipping generation.")
             temp_proc.terminate()
