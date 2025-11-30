@@ -50,8 +50,7 @@ def start_server(bloom_on, parallel_on):
             "-c", "enable_parallel_hash=off"
         ])
 
-    with open(LOG_FILE, "a") as log:
-        proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     
     for _ in range(30):
         if subprocess.run(["pg_isready", "-q", "-d", DB_NAME], stdout=subprocess.DEVNULL).returncode == 0:
@@ -62,13 +61,13 @@ def start_server(bloom_on, parallel_on):
     raise Exception("Server failed to start")
 
 def run_query(filter_val):
-    sql = f"EXPLAIN (ANALYZE, TIMING OFF, SUMMARY ON) SELECT COUNT(fval) FROM fact JOIN dim USING (id) WHERE dval < '{filter_val}'"
+    sql = f"EXPLAIN (ANALYZE, TIMING ON, SUMMARY ON) SELECT COUNT(fval) FROM fact JOIN dim USING (id) WHERE dval < '{filter_val}'"
     result = subprocess.run(["psql", "-d", DB_NAME, "-c", sql], capture_output=True, text=True)
     
     if result.returncode != 0:
         print(f"Query failed for filter < '{filter_val}':", result.stderr)
         return -1, 0
-        
+    print(result.stdout)
     exec_time = -1
     workers = 0
     
@@ -88,7 +87,7 @@ def main():
     
     parser = argparse.ArgumentParser(description="Run Vondra Benchmark")
     parser.add_argument("--filter", help="Specific filter criteria to run (e.g. '1', 'a'). If not set, runs all.", default=None)
-    parser.add_argument("--runs", type=int, help="Number of runs per configuration", default=10)
+    parser.add_argument("--runs", type=int, help="Number of runs per configuration", default=3)
     parser.add_argument("--skip-data-check", action="store_true", help="Skip checking/generating data")
     parser.add_argument("--env", choices=["local", "aws"], default="local", help="Environment to run in (local or aws)")
     args = parser.parse_args()
