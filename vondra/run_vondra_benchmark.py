@@ -30,18 +30,18 @@ def stop_server():
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(2)
 
-def start_server(bloom_on, parallel_on):
-    print(f"Starting server: Bloom={bloom_on}, Parallel={parallel_on}")
+def start_server(bloom_on, workers):
+    print(f"Starting server: Bloom={bloom_on}, Workers={workers}")
     
     cmd = [
         "postgres", "-D", PGDATA,
         "-c", f"enable_bloom_filter={'on' if bloom_on else 'off'}",
     ]
     
-    if parallel_on:
+    if workers > 0:
         cmd.extend([
-            "-c", "max_parallel_workers_per_gather=4",
-            "-c", "max_parallel_workers=8",
+            "-c", f"max_parallel_workers_per_gather={workers}",
+            "-c", f"max_parallel_workers={workers * 2}",
             "-c", "enable_parallel_hash=on"
         ])
     else:
@@ -90,6 +90,7 @@ def main():
     parser.add_argument("--runs", type=int, help="Number of runs per configuration", default=3)
     parser.add_argument("--skip-data-check", action="store_true", help="Skip checking/generating data")
     parser.add_argument("--env", choices=["local", "aws"], default="local", help="Environment to run in (local or aws)")
+    parser.add_argument("--workers", type=int, help="Specific number of parallel workers per gather. If not set, runs [0, 2, 4].", default=None)
     args = parser.parse_args()
 
     # Configure Environment
@@ -103,15 +104,20 @@ def main():
         print(f"Running in Local mode. PGDATA={PGDATA}")
 
     filters_to_run = [args.filter] if args.filter else ALL_FILTERS
-
-    # Initialize results file logic moved inside loop
+    
+    # Determine worker configurations
+    if args.workers is not None:
+        worker_opts = [args.workers]
+    else:
+        worker_opts = [0, 2, 4]
 
     stop_server()
 
     try:
         if not args.skip_data_check:
             print("--- Checking Data ---")
-            temp_proc = start_server(False, False)
+            # Start with 0 workers for check
+            temp_proc = start_server(False, 0)
             check_res = subprocess.run(
                 ["psql", "-d", DB_NAME, "-tAc", "SELECT to_regclass('fact')"], 
                 capture_output=True, text=True
@@ -138,15 +144,15 @@ def main():
             # Truncate file and write header
             with open(results_file, "w") as f:
                 writer = csv.writer(f)
-                writer.writerow(["filter_val", "bloom_enabled", "parallel_enabled", "avg_time_ms", "avg_workers", "runs"])
+                writer.writerow(["filter_val", "bloom_enabled", "worker_conf", "avg_time_ms", "avg_workers", "runs"])
             
-            for parallel_on in PARALLEL_OPTS:
+            for workers in worker_opts:
                 for bloom_on in BLOOM_OPTS:
                     
-                    server_proc = start_server(bloom_on, parallel_on)
+                    server_proc = start_server(bloom_on, workers)
                     
                     try:
-                        print(f"Benchmarking: Filter < '{filter_val}' | Bloom={bloom_on} | Parallel={parallel_on}")
+                        print(f"Benchmarking: Filter < '{filter_val}' | Bloom={bloom_on} | Workers={workers}")
                         
                         times = []
                         worker_counts = []
@@ -164,7 +170,7 @@ def main():
                             
                             with open(results_file, "a") as f:
                                 writer = csv.writer(f)
-                                writer.writerow([filter_val, bloom_on, parallel_on, avg_time, avg_workers, len(times)])
+                                writer.writerow([filter_val, bloom_on, workers, avg_time, avg_workers, len(times)])
                         else:
                             print("  All runs failed.")
                             
