@@ -6,11 +6,14 @@ import csv
 import sys
 
 # --- Configuration ---
-FACT_SIZES = [100_000, 1_000_000, 10_000_000, 100_000_000]
-DIM_SIZES = [10_000, 100_000, 1_000_000, 10_000_000]
+# FACT_SIZES = [100_000, 1_000_000, 10_000_000, 100_000_000]
+# DIM_SIZES = [10_000, 100_000, 1_000_000, 10_000_000]
+FACT_SIZES = [100_000_000]
+DIM_SIZES = [10_000_000]
 SELECTIVITIES = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 BF_MULTS = [0.5, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5]
 BF_HASHES = [1, 2, 3, 4, 5]
+WORKERS = [0, 2, 4]
 
 # FACT_SIZES = [1_000_000]
 # DIM_SIZES = [100_000]
@@ -103,7 +106,7 @@ def main():
     # Initialize results
     with open(RESULTS_FILE, "w") as f:
         writer = csv.writer(f)
-        writer.writerow(["fact_rows", "dim_rows", "selectivity", "bf_enable", "bf_mult", "bf_hashes", "time_ms"])
+        writer.writerow(["fact_rows", "dim_rows", "selectivity", "bf_enable", "bf_mult", "bf_hashes", "workers", "time_ms"])
 
     stop_server()
     server_proc, log_f = start_server()
@@ -130,49 +133,50 @@ def main():
                         for bf_enable in BF_ENABLE_OPTS:
                             for bf_mult in BF_MULTS:
                                 for bf_hashes in BF_HASHES:
+                                    for workers in WORKERS:
                                     
-                                    if bf_enable == "off" and (bf_mult != BF_MULTS[0] or bf_hashes != BF_HASHES[0]):
-                                        continue
-                                    
-                                    print(f"Benchmarking: F={fact_rows} D={dim_rows} S={sel} | BF={bf_enable} M={bf_mult} H={bf_hashes}")
-                                    
-                                    # Construct SQL with SET commands
-                                    set_cmds = f"SET enable_bloom_filter={bf_enable}; SET bloom_filter_multiplier={bf_mult}; SET bloom_filter_hash_functions={bf_hashes}; SET max_parallel_workers_per_gather=0;"
-                                    query_sql = f"{set_cmds} EXPLAIN (ANALYZE, TIMING OFF) SELECT count(*) FROM {fact_table} f JOIN {dim_table} d ON f.int_value = d.int_value;"
-                                    
-                                    # Warmup
-                                    conn.run(query_sql)
-                                    
-                                    # Measure 3 times and take minimum
-                                    min_exec_time = float('inf')
-                                    for i in range(3):
-                                        output = conn.run(query_sql)
-                                        
-                                        current_time = -1
-                                        for line in output:
-                                            if "Execution Time:" in line:
-                                                try:
-                                                    current_time = float(line.split()[2])
-                                                except:
-                                                    pass
-                                                break
-                                        
-                                        if current_time != -1:
-                                            if current_time < min_exec_time:
-                                                min_exec_time = current_time
-                                        else:
-                                            print(f"  Query failed or parse error in run {i+1}. Output snippet: {output[:3]}")
-                                    
-                                    exec_time = min_exec_time if min_exec_time != float('inf') else -1
+                                      if bf_enable == "off" and (bf_mult != BF_MULTS[0] or bf_hashes != BF_HASHES[0]):
+                                          continue
+                                      
+                                      print(f"Benchmarking: F={fact_rows} D={dim_rows} S={sel} | BF={bf_enable} M={bf_mult} H={bf_hashes} T={workers}")
+                                      
+                                      # Construct SQL with SET commands
+                                      set_cmds = f"SET enable_bloom_filter={bf_enable}; SET bloom_filter_multiplier={bf_mult}; SET bloom_filter_hash_functions={bf_hashes}; SET max_parallel_workers_per_gather={workers};"
+                                      query_sql = f"{set_cmds} EXPLAIN (ANALYZE, TIMING OFF) SELECT count(*) FROM {fact_table} f JOIN {dim_table} d ON f.int_value = d.int_value;"
+                                      
+                                      # Warmup
+                                      conn.run(query_sql)
+                                      
+                                      # Measure 3 times and take minimum
+                                      min_exec_time = float('inf')
+                                      for i in range(3):
+                                          output = conn.run(query_sql)
+                                          
+                                          current_time = -1
+                                          for line in output:
+                                              if "Execution Time:" in line:
+                                                  try:
+                                                      current_time = float(line.split()[2])
+                                                  except:
+                                                      pass
+                                                  break
+                                          
+                                          if current_time != -1:
+                                              if current_time < min_exec_time:
+                                                  min_exec_time = current_time
+                                          else:
+                                              print(f"  Query failed or parse error in run {i+1}. Output snippet: {output[:3]}")
+                                      
+                                      exec_time = min_exec_time if min_exec_time != float('inf') else -1
 
-                                    if exec_time == -1:
-                                        print(f"  Query failed for all runs.")
-                                    else:
-                                        print(f"  Result (min of 3): {exec_time} ms")
-                                    
-                                    # Write to open CSV file
-                                    writer.writerow([fact_rows, dim_rows, sel, bf_enable, bf_mult, bf_hashes, exec_time])
-                                    csv_f.flush() # Ensure data is written to disk
+                                      if exec_time == -1:
+                                          print(f"  Query failed for all runs.")
+                                      else:
+                                          print(f"  Result (min of 3): {exec_time} ms")
+                                      
+                                      # Write to open CSV file
+                                      writer.writerow([fact_rows, dim_rows, sel, bf_enable, bf_mult, bf_hashes, workers, exec_time])
+                                      csv_f.flush() # Ensure data is written to disk
 
     except KeyboardInterrupt:
         print("Benchmark interrupted.")
