@@ -525,3 +525,50 @@ mod_m(uint32 val, uint64 m)
 
 	return val & (m - 1);
 }
+
+/*
+ * Merge two Bloom filters by ORing the bitsets.
+ *
+ * The source filter must be non-shared (local).
+ * The target filter can be shared or non-shared.
+ * Both filters must have the same size and parameters (this is verified by assertion).
+ */
+void
+bloom_or(bloom_filter *target, bloom_filter *source)
+{
+	uint32		i;
+	uint32		*src_words = source->bitset;
+	pg_atomic_uint32 *target_atomic_words = (pg_atomic_uint32 *) target->bitset;
+	uint32		*target_words = target->bitset;
+
+	Assert(target->bitset_words == source->bitset_words);
+	Assert(target->k_hash_funcs == source->k_hash_funcs);
+	Assert(target->seed == source->seed);
+	Assert(!source->shared);
+
+	for (i = 0; i < target->bitset_words; i++)
+	{
+		uint32		word = src_words[i];
+
+		if (word != 0)
+		{
+			if (target->shared)
+				pg_atomic_fetch_or_u32(&target_atomic_words[i], word);
+			else
+				target_words[i] |= word;
+		}
+	}
+}
+
+/*
+ * Get the properties of a Bloom filter.
+ *
+ * This allows the caller to create a new Bloom filter with the same properties.
+ */
+void
+bloom_get_properties(bloom_filter *filter, uint64 *size_bytes, int *k_hash_funcs, uint64 *seed)
+{
+	*size_bytes = filter->bitset_bytes;
+	*k_hash_funcs = filter->k_hash_funcs;
+	*seed = filter->seed;
+}

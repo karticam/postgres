@@ -34,6 +34,8 @@ extern void bloom_add_element(bloom_filter *filter, unsigned char *elem,
 extern bool bloom_lacks_element(bloom_filter *filter, unsigned char *elem,
 								size_t len);
 extern double bloom_prop_bits_set(bloom_filter *filter);
+extern void bloom_or(bloom_filter *target, bloom_filter *source);
+extern void bloom_get_properties(bloom_filter *filter, uint64 *size_bytes, int *k_hash_funcs, uint64 *seed);
 
 /* instrumentation accessors */
 extern uint64 bloom_get_insert_count(bloom_filter *filter);

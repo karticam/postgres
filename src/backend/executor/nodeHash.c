@@ -285,6 +285,28 @@ MultiExecParallelHash(HashState *node)
 				ExecParallelHashIncreaseNumBuckets(hashtable);
 			ExecParallelHashEnsureBatchAccessors(hashtable);
 			ExecParallelHashTableSetCurrentBatch(hashtable, 0);
+			bloom_filter *local_filter = NULL;
+
+			/*
+			 * If a shared bloom filter is active, create a local one to accumulate
+			 * insertions.  This avoids heavy contention on the shared filter's
+			 * atomic operations during the parallel build.  We will merge the
+			 * local filter into the shared one after the loop.
+			 */
+			if (pstate->bloom_filter != InvalidDsaPointer)
+			{
+				bloom_filter *shared_filter = dsa_get_address(hashtable->area,
+															  pstate->bloom_filter);
+				uint64		size_bytes;
+				int			k_hash_funcs;
+				uint64		seed;
+
+				bloom_get_properties(shared_filter, &size_bytes, &k_hash_funcs,
+									 &seed);
+				local_filter = bloom_create_with_params(size_bytes, k_hash_funcs,
+														seed);
+			}
+
 			for (;;)
 			{
 				bool		isnull;
@@ -302,18 +324,22 @@ MultiExecParallelHash(HashState *node)
 
 				if (!isnull)
 				{
-					if (pstate->bloom_filter != InvalidDsaPointer)
-					{
-						bloom_filter *filter = dsa_get_address(hashtable->area,
-															   pstate->bloom_filter);
-
-						bloom_add_element(filter, (unsigned char *) &hashvalue,
+					if (local_filter)
+						bloom_add_element(local_filter, (unsigned char *) &hashvalue,
 										  sizeof(uint32));
-					}
 
 					ExecParallelHashTableInsert(hashtable, slot, hashvalue);
 				}
 				hashtable->partialTuples++;
+			}
+
+			if (local_filter)
+			{
+				bloom_filter *shared_filter = dsa_get_address(hashtable->area,
+															  pstate->bloom_filter);
+
+				bloom_or(shared_filter, local_filter);
+				bloom_free(local_filter);
 			}
 
 			/*
