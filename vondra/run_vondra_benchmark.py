@@ -89,6 +89,13 @@ def run_query(filter_val):
 def main():
     global PGDATA
     
+    # Check for dependencies
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("Error: 'matplotlib' is required for graph generation but is not installed.")
+        print("Please install it using: pip install matplotlib")
+        sys.exit(1)
     parser = argparse.ArgumentParser(description="Run Vondra Benchmark")
     parser.add_argument("--filter", help="Specific filter criteria to run (e.g. '1', 'a'). If not set, runs all.", default=None)
     parser.add_argument("--runs", type=int, help="Number of runs per configuration", default=3)
@@ -137,6 +144,10 @@ def main():
             temp_proc.wait()
             stop_server()
 
+        # Aggregated results for plotting
+        # structure: results[workers][label] = {filter_val: avg_time}
+        plot_data = {}
+
         # Main Benchmark Loop
         # Outer loop: Filter (Selectivity)
         for filter_val in filters_to_run:
@@ -175,9 +186,18 @@ def main():
                             avg_workers = sum(worker_counts) / len(worker_counts)
                             print(f"  Average Time: {avg_time:.2f} ms | Avg Workers: {avg_workers:.1f}")
                             
+                            # Save to CSV
                             with open(results_file, "a") as f:
                                 writer = csv.writer(f)
                                 writer.writerow([filter_val, label, bloom_on, independent_on, workers, avg_time, avg_workers, len(times)])
+                            
+                            # Save to plot data
+                            if workers not in plot_data:
+                                plot_data[workers] = {}
+                            if label not in plot_data[workers]:
+                                plot_data[workers][label] = {}
+                            plot_data[workers][label][filter_val] = avg_time
+                            
                         else:
                             print("  All runs failed.")
                             
@@ -185,6 +205,46 @@ def main():
                         server_proc.terminate()
                         server_proc.wait()
                         stop_server()
+
+        # Generate Plots
+        print("\n=== Generating Plots ===")
+        try:
+            # matplotlib is already imported at the top
+            
+            for workers in worker_opts:
+                if workers not in plot_data:
+                    continue
+                    
+                plt.figure(figsize=(10, 6))
+                plt.title(f"Join Performance by Filter Selectivity (Workers: {workers})")
+                plt.xlabel("Filter Value (Selectivity)")
+                plt.ylabel("Average Execution Time (ms)")
+                plt.grid(True, linestyle='--', alpha=0.7)
+                
+                # Use fixed order for consistent coloring if possible
+                labels = ["Shared_Bloom", "Independent_Bloom", "No_Bloom"]
+                markers = ['o', 's', '^']
+                
+                for i, label in enumerate(labels):
+                    if label in plot_data[workers]:
+                        data_points = plot_data[workers][label]
+                        # Ensure we plot in the order of filters_to_run
+                        x_vals = [f for f in filters_to_run if f in data_points]
+                        y_vals = [data_points[f] for f in x_vals]
+                        
+                        if x_vals:
+                            plt.plot(x_vals, y_vals, marker=markers[i], label=label)
+                
+                plt.legend()
+                plot_file = os.path.join(SCRIPT_DIR, f"benchmark_plot_workers_{workers}.png")
+                plt.savefig(plot_file)
+                print(f"Saved plot to {plot_file}")
+                plt.close()
+                
+        except ImportError: # This block will now likely not be hit if matplotlib is imported at the top
+            print("matplotlib not found. Skipping plot generation. Install with 'pip install matplotlib'.")
+        except Exception as e:
+            print(f"Error generating plots: {e}")
 
     except KeyboardInterrupt:
         print("\nBenchmark interrupted.")
