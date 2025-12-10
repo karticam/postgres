@@ -131,6 +131,13 @@
   boot_val => 'true',
 },
 
+{ name => 'enable_parallel_bloom_filter_merge', type => 'bool', context => 'PGC_USERSET', group => 'QUERY_TUNING_METHOD',
+  short_desc => 'Enables merging of thread-local bloom filters in parallel hash join.',
+  flags => 'GUC_EXPLAIN',
+  variable => 'enable_parallel_bloom_filter_merge',
+  boot_val => 'true',
+},
+
 { name => 'bloom_filter_multiplier', type => 'real', context => 'PGC_USERSET', group => 'QUERY_TUNING_METHOD',
   short_desc => 'Sets the multiplier for the bloom filter size based on estimated rows.',
   flags => 'GUC_EXPLAIN',

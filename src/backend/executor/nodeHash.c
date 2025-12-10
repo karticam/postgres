@@ -293,7 +293,7 @@ MultiExecParallelHash(HashState *node)
 			 * atomic operations during the parallel build.  We will merge the
 			 * local filter into the shared one after the loop.
 			 */
-			if (pstate->bloom_filter != InvalidDsaPointer)
+			if (pstate->bloom_filter != InvalidDsaPointer && enable_parallel_bloom_filter_merge)
 			{
 				bloom_filter *shared_filter = dsa_get_address(hashtable->area,
 															  pstate->bloom_filter);
@@ -325,8 +325,18 @@ MultiExecParallelHash(HashState *node)
 				if (!isnull)
 				{
 					if (local_filter)
+					{
 						bloom_add_element(local_filter, (unsigned char *) &hashvalue,
 										  sizeof(uint32));
+					}
+					else if (pstate->bloom_filter != InvalidDsaPointer)
+					{
+						bloom_filter *filter = dsa_get_address(hashtable->area,
+															   pstate->bloom_filter);
+
+						bloom_add_element(filter, (unsigned char *) &hashvalue,
+										  sizeof(uint32));
+					}
 
 					ExecParallelHashTableInsert(hashtable, slot, hashvalue);
 				}

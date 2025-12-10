@@ -29,6 +29,7 @@ extern void ExecHashJoinInitializeWorker(HashJoinState *state,
 										 ParallelWorkerContext *pwcxt);
 
 extern bool enable_bloom_filter;
+extern bool enable_parallel_bloom_filter_merge;
 extern double bloom_filter_multiplier;
 extern int bloom_filter_hash_functions;
 
