@@ -21,8 +21,11 @@ LOG_FILE = os.path.join(SCRIPT_DIR, "vondra_benchmark_log.txt")
 ALL_FILTERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
 
 # Test configurations
-BLOOM_OPTS = [True, False]
-PARALLEL_OPTS = [True, False]
+CONFIGS = [
+    {"bloom": True, "independent": False, "label": "Shared_Bloom"},     # Bloom ON, Shared (Original)
+    {"bloom": True, "independent": True,  "label": "Independent_Bloom"}, # Bloom ON, Independent (New Optimization)
+    {"bloom": False, "independent": False, "label": "No_Bloom"}         # Bloom OFF
+]
 
 def stop_server():
     print("Stopping server...")
@@ -30,12 +33,13 @@ def stop_server():
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(2)
 
-def start_server(bloom_on, workers):
-    print(f"Starting server: Bloom={bloom_on}, Workers={workers}")
+def start_server(bloom_on, independent_on, workers):
+    print(f"Starting server: Bloom={bloom_on}, Independent={independent_on}, Workers={workers}")
     
     cmd = [
         "postgres", "-D", PGDATA,
         "-c", f"enable_bloom_filter={'on' if bloom_on else 'off'}",
+        "-c", f"enable_independent_bloom_filter={'on' if independent_on else 'off'}",
     ]
     
     if workers > 0:
@@ -117,7 +121,7 @@ def main():
         if not args.skip_data_check:
             print("--- Checking Data ---")
             # Start with 0 workers for check
-            temp_proc = start_server(False, 0)
+            temp_proc = start_server(False, False, 0)
             check_res = subprocess.run(
                 ["psql", "-d", DB_NAME, "-tAc", "SELECT to_regclass('fact')"], 
                 capture_output=True, text=True
@@ -144,15 +148,18 @@ def main():
             # Truncate file and write header
             with open(results_file, "w") as f:
                 writer = csv.writer(f)
-                writer.writerow(["filter_val", "bloom_enabled", "worker_conf", "avg_time_ms", "avg_workers", "runs"])
+                writer.writerow(["filter_val", "config_label", "bloom_enabled", "independent_enabled", "worker_conf", "avg_time_ms", "avg_workers", "runs"])
             
             for workers in worker_opts:
-                for bloom_on in BLOOM_OPTS:
+                for conf in CONFIGS:
+                    bloom_on = conf["bloom"]
+                    independent_on = conf["independent"]
+                    label = conf["label"]
                     
-                    server_proc = start_server(bloom_on, workers)
+                    server_proc = start_server(bloom_on, independent_on, workers)
                     
                     try:
-                        print(f"Benchmarking: Filter < '{filter_val}' | Bloom={bloom_on} | Workers={workers}")
+                        print(f"Benchmarking: Filter < '{filter_val}' | Label={label} | Workers={workers}")
                         
                         times = []
                         worker_counts = []
@@ -170,7 +177,7 @@ def main():
                             
                             with open(results_file, "a") as f:
                                 writer = csv.writer(f)
-                                writer.writerow([filter_val, bloom_on, workers, avg_time, avg_workers, len(times)])
+                                writer.writerow([filter_val, label, bloom_on, independent_on, workers, avg_time, avg_workers, len(times)])
                         else:
                             print("  All runs failed.")
                             

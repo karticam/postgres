@@ -180,7 +180,7 @@
 #include "utils/wait_event.h"
 
 bool enable_bloom_filter = true;
-bool enable_parallel_bloom_filter_merge = true;
+bool enable_independent_bloom_filter = true;
 double bloom_filter_multiplier = 1.0;
 int bloom_filter_hash_functions = 3;
 
