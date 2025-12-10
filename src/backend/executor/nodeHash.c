@@ -286,6 +286,7 @@ MultiExecParallelHash(HashState *node)
 			ExecParallelHashEnsureBatchAccessors(hashtable);
 			ExecParallelHashTableSetCurrentBatch(hashtable, 0);
 			bloom_filter *local_filter = NULL;
+			// long local_tuples_inserted = 0;
 
 			/*
 			 * If a shared bloom filter is active, create a local one to accumulate
@@ -305,6 +306,7 @@ MultiExecParallelHash(HashState *node)
 									 &seed);
 				local_filter = bloom_create_with_params(size_bytes, k_hash_funcs,
 														seed);
+				// elog(LOG, "[BloomOpt] Worker %d: Created local bloom filter at %p", MyProcPid, (void *)local_filter);
 			}
 
 			for (;;)
@@ -328,6 +330,7 @@ MultiExecParallelHash(HashState *node)
 					{
 						bloom_add_element(local_filter, (unsigned char *) &hashvalue,
 										  sizeof(uint32));
+						// local_tuples_inserted++;
 					}
 					else if (pstate->bloom_filter != InvalidDsaPointer)
 					{
@@ -348,7 +351,14 @@ MultiExecParallelHash(HashState *node)
 				bloom_filter *shared_filter = dsa_get_address(hashtable->area,
 															  pstate->bloom_filter);
 
-				bloom_or(shared_filter, local_filter);
+				// elog(LOG, "[BloomOpt] Worker %d: Merging local bloom filter (inserted %ld tuples) into shared filter at %p (Serialized)",
+				// 	 MyProcPid, local_tuples_inserted, (void *)shared_filter);
+				
+				/* Serialize the merge to avoid atomic contention */
+				LWLockAcquire(&pstate->bloom_lock, LW_EXCLUSIVE);
+				bloom_or_nonatomic(shared_filter, local_filter);
+				LWLockRelease(&pstate->bloom_lock);
+				
 				bloom_free(local_filter);
 			}
 
