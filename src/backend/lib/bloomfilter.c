@@ -533,30 +533,77 @@ mod_m(uint32 val, uint64 m)
  * The target filter can be shared or non-shared.
  * Both filters must have the same size and parameters (this is verified by assertion).
  */
+/*
+ * Merge two Bloom filters by ORing the bitsets.
+ *
+ * The source filter must be non-shared (local).
+ * The target filter can be shared or non-shared.
+ * Both filters must have the same size and parameters (this is verified by assertion).
+ */
 void
 bloom_or(bloom_filter *target, bloom_filter *source)
 {
-	uint32		i;
-	uint32		*src_words = source->bitset;
-	pg_atomic_uint32 *target_atomic_words = (pg_atomic_uint32 *) target->bitset;
-	uint32		*target_words = target->bitset;
+	uint64		*src_words = (uint64 *) source->bitset;
+	pg_atomic_uint64 *target_atomic_words = (pg_atomic_uint64 *) target->bitset;
+	uint64		*target_words = (uint64 *) target->bitset;
+	size_t		num_u64_words;
+	size_t		i;
 
 	Assert(target->bitset_words == source->bitset_words);
 	Assert(target->k_hash_funcs == source->k_hash_funcs);
 	Assert(target->seed == source->seed);
 	Assert(!source->shared);
 
-	for (i = 0; i < target->bitset_words; i++)
+	/*
+	 * Process in 64-bit chunks for efficiency.
+	 * bitset_bytes is guaranteed to be a power of 2 and aligned, so this is safe.
+	 */
+	num_u64_words = target->bitset_bytes / sizeof(uint64);
+
+	for (i = 0; i < num_u64_words; i++)
 	{
-		uint32		word = src_words[i];
+		uint64		word = src_words[i];
 
 		if (word != 0)
 		{
 			if (target->shared)
-				pg_atomic_fetch_or_u32(&target_atomic_words[i], word);
+				pg_atomic_fetch_or_u64(&target_atomic_words[i], word);
 			else
 				target_words[i] |= word;
 		}
+	}
+}
+
+/*
+ * Merge two Bloom filters by ORing the bitsets without using atomics.
+ *
+ * This function assumes that the caller holds an exclusive lock on the
+ * target filter if it is shared, preventing concurrent access.
+ */
+void
+bloom_or_nonatomic(bloom_filter *target, bloom_filter *source)
+{
+	uint64		*src_words = (uint64 *) source->bitset;
+	uint64		*target_words = (uint64 *) target->bitset;
+	size_t		num_u64_words;
+	size_t		i;
+
+	Assert(target->bitset_words == source->bitset_words);
+	Assert(target->k_hash_funcs == source->k_hash_funcs);
+	Assert(target->seed == source->seed);
+	Assert(!source->shared);
+
+	/*
+	 * Process in 64-bit chunks for efficiency.
+	 */
+	num_u64_words = target->bitset_bytes / sizeof(uint64);
+
+	for (i = 0; i < num_u64_words; i++)
+	{
+		uint64		word = src_words[i];
+
+		if (word != 0)
+			target_words[i] |= word;
 	}
 }
 
