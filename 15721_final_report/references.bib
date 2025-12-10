@@ -1,0 +1,98 @@
+@article{zhu2017lip,
+  title={Looking Ahead Makes Query Plans Robust},
+  author={Zhu, Jianqiao and Potti, Navneet and Saurabh, Saket and Patel, Jignesh M.},
+  journal={Proceedings of the VLDB Endowment},
+  volume={10},
+  number={8},
+  pages={889--900},
+  year={2017}
+}
+
+@article{gaffney2022sqlite,
+  title={SQLite: Past, Present, and Future},
+  author={Gaffney, Kevin P. and Prammer, Martin and Brasfield, Larry and Hipp, D. Richard and Kennedy, Dan and Patel, Jignesh M.},
+  journal={Proceedings of the VLDB Endowment},
+  volume={15},
+  number={12},
+  pages={3535--3547},
+  year={2022}
+}
+
+@misc{vondra2015bloomhashbatches,
+  author       = {Tomas Vondra},
+  title        = {WIP: bloom filter in Hash Joins with batches},
+  howpublished = {PostgreSQL hackers mailing list},
+  year         = {2015},
+  month        = {dec},
+  day          = {15},
+  url          = {https://www.postgresql.org/message-id/5670946E.8070705%402ndquadrant.com},
+  note         = {Mailing list post; discusses Bloom filters for batched hash joins, memory accounting, and selectivity-driven gating},
+  urldate      = {2025-10-19}
+}
+
+@misc{li2022mergejoinbfpushdown,
+  author       = {Zheng Li},
+  title        = {Bloom filter Pushdown Optimization for Merge Join},
+  howpublished = {PostgreSQL hackers mailing list},
+  year         = {2022},
+  month        = {sep},
+  day          = {30},
+  url          = {https://www.postgresql.org/message-id/CAAD30ULaxjR%2BYv_aP1YAu8FmCiEqpYSne4a%3Dn228nysuXD0LSA%40mail.gmail.com},
+  note         = {Mailing list post; proposes planner-driven semijoin Bloom pushdown with thresholds, parallel build, and GUCs},
+  urldate      = {2025-10-19}
+}
+
+@article{zhang2023adaptive,
+  title     = {Simple Adaptive Query Processing vs. Learned Query Optimizers: Observations and Analysis},
+  author    = {Yunjia Zhang and Yannis Chronis and Jignesh M. Patel and Theodoros Rekatsinas},
+  journal   = {Proceedings of the VLDB Endowment},
+  volume    = {16},
+  number    = {11},
+  pages     = {2962--2975},
+  year      = {2023},
+  doi       = {10.14778/3611479.3611501}
+}
+
+@inproceedings{mackert1986r_optimizer,
+  title={R* Optimizer Validation and Performance Evaluation for Distributed Queries},
+  author={Mackert, Lothar F and Lohman, Guy M},
+  booktitle={Proceedings of the Twelfth International Conference on Very Large Data Bases},
+  pages={149--159},
+  year={1986},
+  publisher={Morgan Kaufmann Publishers Inc.},
+  address={Kyoto, Japan},
+  note={The seminal paper introducing the "Bloomjoin" to reduce data transfer in distributed joins.}
+}
+
+@inproceedings{zeller1990adaptive,
+  title={An Adaptive Hash Join Algorithm for Multiuser Environments},
+  author={Zeller, Hansj{\"o}rg and Gray, Jim},
+  booktitle={Proceedings of the 16th VLDB Conference},
+  pages={186--197},
+  year={1990},
+  publisher={Morgan Kaufmann},
+  address={Brisbane, Australia},
+  note={The basis for the Hybrid Hash Join algorithm implemented in PostgreSQL.}
+}
+
+@inproceedings{ives2009adaptive,
+  title={Adaptive Information Passing for Push-Style Query Processing},
+  author={Ives, Zachary G and Taylor, Nicholas E and Deshpande, Amol and Raman, Vijayshankar},
+  booktitle={International Workshop on Ranking in Databases (DBRank)},
+  year={2009},
+  pages={1555--1558},
+  publisher={IEEE},
+  address={Shanghai, China},
+  note={Discusses passing filters between operators in a pipelined execution model.}
+}
+
+@article{bloom1970space,
+  title={Space/time trade-offs in hash coding with allowable errors},
+  author={Bloom, Burton H},
+  journal={Communications of the ACM},
+  volume={13},
+  number={7},
+  pages={422--426},
+  year={1970},
+  publisher={ACM New York, NY, USA}
+}

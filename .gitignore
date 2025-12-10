@@ -51,3 +51,4 @@ lib*.pc
 logfile
 compile_commands.json
 scripts/*
+.DS_Store

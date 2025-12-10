@@ -1,0 +1,2769 @@
+./run_vondra_benchmark.py --env aws --workers 2
+Running in AWS mode. PGDATA=/mnt/pgdata/data
+Stopping server...
+--- Checking Data ---
+Starting server: Bloom=False, Workers=0
+Tables found. Skipping generation.
+Stopping server...
+
+=== Starting Study for Filter < '1' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < '1' | Bloom=True | Workers=2
+                                                                       QUERY PLAN                                                                        
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1506614.60..1506614.61 rows=1 width=8) (actual time=5106.386..5112.867 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1506614.39..1506614.60 rows=2 width=8) (actual time=5102.361..5112.859 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1505614.39..1505614.40 rows=1 width=8) (actual time=5101.243..5101.251 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=139024.60..1498400.73 rows=2885462 width=33) (actual time=390.318..5007.637 rows=2084863.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.084..2941.310 rows=8549233.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=288548 width=4) (actual time=388.440..388.441 rows=208486.33 loops=3)
+                           Buckets: 1048576  Batches: 1  Memory Usage: 32704kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=288548 width=4) (actual time=0.107..314.029 rows=208486.33 loops=3)
+                                 Filter: (dval < '1'::text)
+                                 Rows Removed by Filter: 3124847
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=170 read=43
+ Planning Time: 1.049 ms
+ Execution Time: 5112.954 ms
+(24 rows)
+
+
+                                                                       QUERY PLAN                                                                        
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1506614.60..1506614.61 rows=1 width=8) (actual time=5066.976..5073.539 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1506614.39..1506614.60 rows=2 width=8) (actual time=5062.867..5073.533 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1505614.39..1505614.40 rows=1 width=8) (actual time=5062.031..5062.039 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=139024.60..1498400.73 rows=2885462 width=33) (actual time=364.571..4967.920 rows=2084863.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.117..2934.100 rows=8549233.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=288548 width=4) (actual time=362.771..362.772 rows=208486.33 loops=3)
+                           Buckets: 1048576  Batches: 1  Memory Usage: 32704kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=288548 width=4) (actual time=0.011..294.741 rows=208486.33 loops=3)
+                                 Filter: (dval < '1'::text)
+                                 Rows Removed by Filter: 3124847
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.701 ms
+ Execution Time: 5073.619 ms
+(24 rows)
+
+
+                                                                       QUERY PLAN                                                                        
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1506614.60..1506614.61 rows=1 width=8) (actual time=5079.806..5085.697 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1506614.39..1506614.60 rows=2 width=8) (actual time=5079.790..5085.691 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1505614.39..1505614.40 rows=1 width=8) (actual time=5075.726..5075.735 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=139024.60..1498400.73 rows=2885462 width=33) (actual time=367.137..4981.640 rows=2084863.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.119..2936.858 rows=8549233.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=288548 width=4) (actual time=365.358..365.359 rows=208486.33 loops=3)
+                           Buckets: 1048576  Batches: 1  Memory Usage: 32704kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=288548 width=4) (actual time=0.011..295.246 rows=208486.33 loops=3)
+                                 Filter: (dval < '1'::text)
+                                 Rows Removed by Filter: 3124847
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.720 ms
+ Execution Time: 5085.779 ms
+(24 rows)
+
+
+  Average Time: 5090.78 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < '1' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1506614.60..1506614.61 rows=1 width=8) (actual time=8611.834..8618.606 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1506614.39..1506614.60 rows=2 width=8) (actual time=8607.495..8618.599 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1505614.39..1505614.40 rows=1 width=8) (actual time=8606.436..8606.439 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=139024.60..1498400.73 rows=2885462 width=33) (actual time=370.251..8511.407 rows=2084863.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.079..1759.275 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=288548 width=4) (actual time=368.526..368.526 rows=208486.33 loops=3)
+                           Buckets: 1048576  Batches: 1  Memory Usage: 32736kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=288548 width=4) (actual time=0.091..313.646 rows=208486.33 loops=3)
+                                 Filter: (dval < '1'::text)
+                                 Rows Removed by Filter: 3124847
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.039 ms
+ Execution Time: 8618.705 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1506614.60..1506614.61 rows=1 width=8) (actual time=8754.382..8760.971 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1506614.39..1506614.60 rows=2 width=8) (actual time=8750.033..8760.965 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1505614.39..1505614.40 rows=1 width=8) (actual time=8748.897..8748.904 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=139024.60..1498400.73 rows=2885462 width=33) (actual time=353.776..8656.469 rows=2084863.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.128..1694.893 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=288548 width=4) (actual time=351.803..351.804 rows=208486.33 loops=3)
+                           Buckets: 1048576  Batches: 1  Memory Usage: 32704kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=288548 width=4) (actual time=0.013..295.097 rows=208486.33 loops=3)
+                                 Filter: (dval < '1'::text)
+                                 Rows Removed by Filter: 3124847
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.755 ms
+ Execution Time: 8761.062 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1506614.60..1506614.61 rows=1 width=8) (actual time=7675.110..7681.212 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1506614.39..1506614.60 rows=2 width=8) (actual time=7670.951..7681.206 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1505614.39..1505614.40 rows=1 width=8) (actual time=7669.964..7669.967 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=139024.60..1498400.73 rows=2885462 width=33) (actual time=345.804..7577.833 rows=2084863.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.113..1649.310 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=288548 width=4) (actual time=344.005..344.006 rows=208486.33 loops=3)
+                           Buckets: 1048576  Batches: 1  Memory Usage: 32704kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=288548 width=4) (actual time=0.017..292.443 rows=208486.33 loops=3)
+                                 Filter: (dval < '1'::text)
+                                 Rows Removed by Filter: 3124847
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.703 ms
+ Execution Time: 7681.303 ms
+(24 rows)
+
+
+  Average Time: 8353.69 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < '2' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < '2' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1516060.47..1516060.48 rows=1 width=8) (actual time=6252.147..6258.501 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1516060.25..1516060.46 rows=2 width=8) (actual time=6243.794..6258.494 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1515060.25..1515060.26 rows=1 width=8) (actual time=6242.807..6242.819 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=142173.24..1501549.37 rows=5404353 width=33) (actual time=497.165..6059.992 rows=4166330.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.072..3055.154 rows=10191543.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=540439 width=4) (actual time=493.671..493.672 rows=416633.00 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 65312kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=540439 width=4) (actual time=0.121..340.552 rows=416633.00 loops=3)
+                                 Filter: (dval < '2'::text)
+                                 Rows Removed by Filter: 2916700
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.070 ms
+ Execution Time: 6258.588 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1516060.47..1516060.48 rows=1 width=8) (actual time=6213.963..6220.253 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1516060.25..1516060.46 rows=2 width=8) (actual time=6213.941..6220.246 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1515060.25..1515060.26 rows=1 width=8) (actual time=6205.892..6205.908 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=142173.24..1501549.37 rows=5404353 width=33) (actual time=447.563..6018.491 rows=4166330.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.116..3046.427 rows=10191543.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=540439 width=4) (actual time=444.105..444.106 rows=416633.00 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 65344kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=540439 width=4) (actual time=0.013..303.272 rows=416633.00 loops=3)
+                                 Filter: (dval < '2'::text)
+                                 Rows Removed by Filter: 2916700
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.722 ms
+ Execution Time: 6220.358 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1516060.47..1516060.48 rows=1 width=8) (actual time=6206.974..6213.341 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1516060.25..1516060.46 rows=2 width=8) (actual time=6198.541..6213.334 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1515060.25..1515060.26 rows=1 width=8) (actual time=6197.754..6197.768 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=142173.24..1501549.37 rows=5404353 width=33) (actual time=462.151..6011.031 rows=4166330.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.113..3059.400 rows=10191543.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=540439 width=4) (actual time=458.674..458.675 rows=416633.00 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 65312kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=540439 width=4) (actual time=0.014..306.234 rows=416633.00 loops=3)
+                                 Filter: (dval < '2'::text)
+                                 Rows Removed by Filter: 2916700
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.725 ms
+ Execution Time: 6213.424 ms
+(24 rows)
+
+
+  Average Time: 6230.79 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < '2' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1516060.47..1516060.48 rows=1 width=8) (actual time=8597.464..8603.621 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1516060.25..1516060.46 rows=2 width=8) (actual time=8597.444..8603.614 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1515060.25..1515060.26 rows=1 width=8) (actual time=8589.946..8589.949 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=142173.24..1501549.37 rows=5404353 width=33) (actual time=464.383..8401.900 rows=4166330.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.076..1696.474 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=540439 width=4) (actual time=461.174..461.175 rows=416633.00 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 65344kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=540439 width=4) (actual time=0.079..342.533 rows=416633.00 loops=3)
+                                 Filter: (dval < '2'::text)
+                                 Rows Removed by Filter: 2916700
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.069 ms
+ Execution Time: 8603.717 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1516060.47..1516060.48 rows=1 width=8) (actual time=8592.811..8600.061 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1516060.25..1516060.46 rows=2 width=8) (actual time=8584.770..8600.054 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1515060.25..1515060.26 rows=1 width=8) (actual time=8584.126..8584.129 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=142173.24..1501549.37 rows=5404353 width=33) (actual time=413.913..8399.128 rows=4166330.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.127..1701.367 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=540439 width=4) (actual time=410.724..410.725 rows=416633.00 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 65312kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=540439 width=4) (actual time=0.012..308.242 rows=416633.00 loops=3)
+                                 Filter: (dval < '2'::text)
+                                 Rows Removed by Filter: 2916700
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.731 ms
+ Execution Time: 8600.153 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1516060.47..1516060.48 rows=1 width=8) (actual time=8736.470..8743.109 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1516060.25..1516060.46 rows=2 width=8) (actual time=8728.727..8743.103 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1515060.25..1515060.26 rows=1 width=8) (actual time=8727.857..8727.860 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=142173.24..1501549.37 rows=5404353 width=33) (actual time=414.429..8541.927 rows=4166330.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.109..1702.205 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=540439 width=4) (actual time=411.194..411.195 rows=416633.00 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 65312kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=540439 width=4) (actual time=0.012..308.616 rows=416633.00 loops=3)
+                                 Filter: (dval < '2'::text)
+                                 Rows Removed by Filter: 2916700
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.737 ms
+ Execution Time: 8743.197 ms
+(24 rows)
+
+
+  Average Time: 8649.02 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < '3' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < '3' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1526898.07..1526898.08 rows=1 width=8) (actual time=9634.647..9643.230 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1526897.85..1526898.06 rows=2 width=8) (actual time=9622.752..9643.222 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1525897.85..1525897.86 rows=1 width=8) (actual time=9622.962..9622.978 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=145785.79..1505161.92 rows=8294374 width=33) (actual time=595.059..9350.119 rows=6251403.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.080..3505.275 rows=17154103.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=829443 width=4) (actual time=591.667..591.668 rows=625140.33 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 89760kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=829443 width=4) (actual time=0.121..365.537 rows=625140.33 loops=3)
+                                 Filter: (dval < '3'::text)
+                                 Rows Removed by Filter: 2708193
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.061 ms
+ Execution Time: 9643.324 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1526898.07..1526898.08 rows=1 width=8) (actual time=9343.633..9352.357 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1526897.85..1526898.06 rows=2 width=8) (actual time=9332.007..9352.349 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1525897.85..1525897.86 rows=1 width=8) (actual time=9332.140..9332.154 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=145785.79..1505161.92 rows=8294374 width=33) (actual time=568.115..9067.064 rows=6251403.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.150..3416.672 rows=17154103.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=829443 width=4) (actual time=564.548..564.548 rows=625140.33 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 89792kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=829443 width=4) (actual time=0.015..328.969 rows=625140.33 loops=3)
+                                 Filter: (dval < '3'::text)
+                                 Rows Removed by Filter: 2708193
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.758 ms
+ Execution Time: 9352.443 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1526898.07..1526898.08 rows=1 width=8) (actual time=9099.485..9108.366 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1526897.85..1526898.06 rows=2 width=8) (actual time=9099.461..9108.359 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1525897.85..1525897.86 rows=1 width=8) (actual time=9089.564..9089.582 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=145785.79..1505161.92 rows=8294374 width=33) (actual time=559.814..8824.851 rows=6251403.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.131..3369.243 rows=17154103.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=829443 width=4) (actual time=556.274..556.276 rows=625140.33 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 89792kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=829443 width=4) (actual time=0.013..326.628 rows=625140.33 loops=3)
+                                 Filter: (dval < '3'::text)
+                                 Rows Removed by Filter: 2708193
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.755 ms
+ Execution Time: 9108.452 ms
+(24 rows)
+
+
+  Average Time: 9368.07 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < '3' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1526898.07..1526898.08 rows=1 width=8) (actual time=11692.069..11700.731 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1526897.85..1526898.06 rows=2 width=8) (actual time=11692.046..11700.723 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1525897.85..1525897.86 rows=1 width=8) (actual time=11681.745..11681.747 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=145785.79..1505161.92 rows=8294374 width=33) (actual time=521.888..11409.681 rows=6251403.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.080..1744.156 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=829443 width=4) (actual time=518.599..518.600 rows=625140.33 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 89792kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=829443 width=4) (actual time=0.093..342.953 rows=625140.33 loops=3)
+                                 Filter: (dval < '3'::text)
+                                 Rows Removed by Filter: 2708193
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.063 ms
+ Execution Time: 11700.836 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1526898.07..1526898.08 rows=1 width=8) (actual time=12232.380..12241.003 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1526897.85..1526898.06 rows=2 width=8) (actual time=12232.360..12240.996 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1525897.85..1525897.86 rows=1 width=8) (actual time=12222.339..12222.342 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=145785.79..1505161.92 rows=8294374 width=33) (actual time=496.977..11953.709 rows=6251403.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.131..1770.152 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=829443 width=4) (actual time=493.604..493.604 rows=625140.33 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 89824kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=829443 width=4) (actual time=0.014..319.704 rows=625140.33 loops=3)
+                                 Filter: (dval < '3'::text)
+                                 Rows Removed by Filter: 2708193
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.763 ms
+ Execution Time: 12241.103 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1526898.07..1526898.08 rows=1 width=8) (actual time=12328.545..12337.275 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1526897.85..1526898.06 rows=2 width=8) (actual time=12316.574..12337.269 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1525897.85..1525897.86 rows=1 width=8) (actual time=12316.965..12316.968 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=145785.79..1505161.92 rows=8294374 width=33) (actual time=496.735..12049.927 rows=6251403.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.128..1778.270 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=829443 width=4) (actual time=493.458..493.459 rows=625140.33 loops=3)
+                           Buckets: 2097152  Batches: 1  Memory Usage: 89792kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=829443 width=4) (actual time=0.013..319.603 rows=625140.33 loops=3)
+                                 Filter: (dval < '3'::text)
+                                 Rows Removed by Filter: 2708193
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.754 ms
+ Execution Time: 12337.372 ms
+(24 rows)
+
+
+  Average Time: 12093.10 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < '4' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < '4' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1536341.91..1536341.92 rows=1 width=8) (actual time=9191.104..9204.071 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1536341.70..1536341.91 rows=2 width=8) (actual time=9172.605..9204.061 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1535341.70..1535341.71 rows=1 width=8) (actual time=9172.278..9172.315 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=148933.75..1508309.88 rows=10812726 width=33) (actual time=698.324..8806.376 rows=8337410.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.094..3795.595 rows=13508643.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1081280 width=4) (actual time=691.003..691.004 rows=833741.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 130656kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1081280 width=4) (actual time=0.145..365.606 rows=833741.00 loops=3)
+                                 Filter: (dval < '4'::text)
+                                 Rows Removed by Filter: 2499592
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.090 ms
+ Execution Time: 9204.175 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1536341.91..1536341.92 rows=1 width=8) (actual time=8865.547..8878.097 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1536341.70..1536341.91 rows=2 width=8) (actual time=8848.676..8878.089 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1535341.70..1535341.71 rows=1 width=8) (actual time=8847.501..8847.530 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=148933.75..1508309.88 rows=10812726 width=33) (actual time=685.502..8485.810 rows=8337410.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.129..3664.597 rows=13508643.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1081280 width=4) (actual time=677.798..677.799 rows=833741.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 130656kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1081280 width=4) (actual time=0.021..344.624 rows=833741.00 loops=3)
+                                 Filter: (dval < '4'::text)
+                                 Rows Removed by Filter: 2499592
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.779 ms
+ Execution Time: 8878.194 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1536341.91..1536341.92 rows=1 width=8) (actual time=9117.649..9130.287 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1536341.70..1536341.91 rows=2 width=8) (actual time=9100.626..9130.279 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1535341.70..1535341.71 rows=1 width=8) (actual time=9099.885..9099.916 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=148933.75..1508309.88 rows=10812726 width=33) (actual time=699.112..8736.997 rows=8337410.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.148..3799.005 rows=13508643.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1081280 width=4) (actual time=691.864..691.865 rows=833741.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 130688kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1081280 width=4) (actual time=0.019..347.554 rows=833741.00 loops=3)
+                                 Filter: (dval < '4'::text)
+                                 Rows Removed by Filter: 2499592
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.777 ms
+ Execution Time: 9130.385 ms
+(24 rows)
+
+
+  Average Time: 9070.92 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < '4' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1536341.91..1536341.92 rows=1 width=8) (actual time=12479.030..12491.429 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1536341.70..1536341.91 rows=2 width=8) (actual time=12479.006..12491.422 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1535341.70..1535341.71 rows=1 width=8) (actual time=12463.230..12463.233 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=148933.75..1508309.88 rows=10812726 width=33) (actual time=640.892..12095.905 rows=8337410.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.087..1878.710 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1081280 width=4) (actual time=634.237..634.238 rows=833741.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 130656kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1081280 width=4) (actual time=0.093..376.508 rows=833741.00 loops=3)
+                                 Filter: (dval < '4'::text)
+                                 Rows Removed by Filter: 2499592
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.079 ms
+ Execution Time: 12491.542 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1536341.91..1536341.92 rows=1 width=8) (actual time=12466.421..12479.050 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1536341.70..1536341.91 rows=2 width=8) (actual time=12449.025..12479.041 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1535341.70..1535341.71 rows=1 width=8) (actual time=12448.402..12448.406 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=148933.75..1508309.88 rows=10812726 width=33) (actual time=599.706..12080.789 rows=8337410.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.132..1896.817 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1081280 width=4) (actual time=593.067..593.068 rows=833741.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 130688kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1081280 width=4) (actual time=0.016..343.218 rows=833741.00 loops=3)
+                                 Filter: (dval < '4'::text)
+                                 Rows Removed by Filter: 2499592
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.760 ms
+ Execution Time: 12479.155 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1536341.91..1536341.92 rows=1 width=8) (actual time=12409.762..12422.485 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1536341.70..1536341.91 rows=2 width=8) (actual time=12392.619..12422.476 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1535341.70..1535341.71 rows=1 width=8) (actual time=12392.085..12392.088 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=148933.75..1508309.88 rows=10812726 width=33) (actual time=596.822..12027.220 rows=8337410.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.127..1882.286 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1081280 width=4) (actual time=590.294..590.295 rows=833741.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 130688kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1081280 width=4) (actual time=0.017..342.527 rows=833741.00 loops=3)
+                                 Filter: (dval < '4'::text)
+                                 Rows Removed by Filter: 2499592
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.751 ms
+ Execution Time: 12422.590 ms
+(24 rows)
+
+
+  Average Time: 12464.43 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < '5' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < '5' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1545718.69..1545718.70 rows=1 width=8) (actual time=11265.975..11279.414 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1545718.47..1545718.68 rows=2 width=8) (actual time=11244.769..11279.403 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1544718.47..1544718.48 rows=1 width=8) (actual time=11245.018..11245.050 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=152059.36..1511435.49 rows=13313192 width=33) (actual time=858.970..10788.421 rows=10416916.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.096..4002.260 rows=17408730.00 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1331329 width=4) (actual time=851.538..851.539 rows=1041691.67 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 155072kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1331329 width=4) (actual time=0.145..415.235 rows=1041691.67 loops=3)
+                                 Filter: (dval < '5'::text)
+                                 Rows Removed by Filter: 2291642
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.102 ms
+ Execution Time: 11279.518 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1545718.69..1545718.70 rows=1 width=8) (actual time=11369.059..11382.560 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1545718.47..1545718.68 rows=2 width=8) (actual time=11347.737..11382.550 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1544718.47..1544718.48 rows=1 width=8) (actual time=11347.846..11347.884 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=152059.36..1511435.49 rows=13313192 width=33) (actual time=786.586..10892.098 rows=10416916.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.133..4102.474 rows=17408730.00 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1331329 width=4) (actual time=779.110..779.111 rows=1041691.67 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 155072kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1331329 width=4) (actual time=0.021..365.915 rows=1041691.67 loops=3)
+                                 Filter: (dval < '5'::text)
+                                 Rows Removed by Filter: 2291642
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.844 ms
+ Execution Time: 11382.662 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1545718.69..1545718.70 rows=1 width=8) (actual time=10952.023..10965.441 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1545718.47..1545718.68 rows=2 width=8) (actual time=10931.083..10965.430 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1544718.47..1544718.48 rows=1 width=8) (actual time=10931.452..10931.485 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=152059.36..1511435.49 rows=13313192 width=33) (actual time=763.291..10475.692 rows=10416916.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.144..3917.856 rows=17408730.00 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1331329 width=4) (actual time=755.996..755.997 rows=1041691.67 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 155072kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1331329 width=4) (actual time=0.023..359.134 rows=1041691.67 loops=3)
+                                 Filter: (dval < '5'::text)
+                                 Rows Removed by Filter: 2291642
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.758 ms
+ Execution Time: 10965.556 ms
+(24 rows)
+
+
+  Average Time: 11209.25 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < '5' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1545718.69..1545718.70 rows=1 width=8) (actual time=14267.704..14281.204 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1545718.47..1545718.68 rows=2 width=8) (actual time=14243.714..14281.193 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1544718.47..1544718.48 rows=1 width=8) (actual time=14244.166..14244.170 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=152059.36..1511435.49 rows=13313192 width=33) (actual time=726.332..13804.398 rows=10416916.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.103..1955.321 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1331329 width=4) (actual time=718.786..718.787 rows=1041691.67 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 155072kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1331329 width=4) (actual time=0.115..391.473 rows=1041691.67 loops=3)
+                                 Filter: (dval < '5'::text)
+                                 Rows Removed by Filter: 2291642
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.125 ms
+ Execution Time: 14281.318 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1545718.69..1545718.70 rows=1 width=8) (actual time=13878.474..13891.857 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1545718.47..1545718.68 rows=2 width=8) (actual time=13856.913..13891.846 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1544718.47..1544718.48 rows=1 width=8) (actual time=13856.892..13856.896 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=152059.36..1511435.49 rows=13313192 width=33) (actual time=692.948..13412.490 rows=10416916.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.141..1895.789 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1331329 width=4) (actual time=685.762..685.763 rows=1041691.67 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 155072kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1331329 width=4) (actual time=0.020..363.621 rows=1041691.67 loops=3)
+                                 Filter: (dval < '5'::text)
+                                 Rows Removed by Filter: 2291642
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.842 ms
+ Execution Time: 13891.971 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1545718.69..1545718.70 rows=1 width=8) (actual time=13691.314..13704.626 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1545718.47..1545718.68 rows=2 width=8) (actual time=13670.485..13704.617 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1544718.47..1544718.48 rows=1 width=8) (actual time=13670.626..13670.630 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=152059.36..1511435.49 rows=13313192 width=33) (actual time=670.835..13226.298 rows=10416916.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.122..1888.465 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1331329 width=4) (actual time=664.034..664.035 rows=1041691.67 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 155072kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1331329 width=4) (actual time=0.018..356.688 rows=1041691.67 loops=3)
+                                 Filter: (dval < '5'::text)
+                                 Rows Removed by Filter: 2291642
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.808 ms
+ Execution Time: 13704.735 ms
+(24 rows)
+
+
+  Average Time: 13959.34 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < '6' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < '6' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1555100.36..1555100.37 rows=1 width=8) (actual time=12784.341..12801.986 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1555100.14..1555100.35 rows=2 width=8) (actual time=12784.315..12801.978 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1554100.14..1554100.15 rows=1 width=8) (actual time=12764.451..12764.484 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=155186.60..1514562.73 rows=15814965 width=33) (actual time=928.656..12241.581 rows=12501160.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.090..4042.225 rows=20892356.67 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1581508 width=4) (actual time=921.371..921.372 rows=1250116.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 179552kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1581508 width=4) (actual time=0.163..413.506 rows=1250116.00 loops=3)
+                                 Filter: (dval < '6'::text)
+                                 Rows Removed by Filter: 2083217
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.103 ms
+ Execution Time: 12802.081 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1555100.36..1555100.37 rows=1 width=8) (actual time=12509.338..12527.230 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1555100.14..1555100.35 rows=2 width=8) (actual time=12509.313..12527.222 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1554100.14..1554100.15 rows=1 width=8) (actual time=12489.779..12489.811 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=155186.60..1514562.73 rows=15814965 width=33) (actual time=857.976..11961.655 rows=12501160.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.119..3962.305 rows=20892356.67 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1581508 width=4) (actual time=850.674..850.675 rows=1250116.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 179520kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1581508 width=4) (actual time=0.018..369.910 rows=1250116.00 loops=3)
+                                 Filter: (dval < '6'::text)
+                                 Rows Removed by Filter: 2083217
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.770 ms
+ Execution Time: 12527.323 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1555100.36..1555100.37 rows=1 width=8) (actual time=12371.582..12389.294 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1555100.14..1555100.35 rows=2 width=8) (actual time=12348.057..12389.283 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1554100.14..1554100.15 rows=1 width=8) (actual time=12349.332..12349.363 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=155186.60..1514562.73 rows=15814965 width=33) (actual time=848.793..11821.162 rows=12501160.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.118..3900.594 rows=20892356.67 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1581508 width=4) (actual time=841.704..841.705 rows=1250116.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 179520kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1581508 width=4) (actual time=0.017..368.319 rows=1250116.00 loops=3)
+                                 Filter: (dval < '6'::text)
+                                 Rows Removed by Filter: 2083217
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.780 ms
+ Execution Time: 12389.384 ms
+(24 rows)
+
+
+  Average Time: 12572.93 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < '6' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1555100.36..1555100.37 rows=1 width=8) (actual time=14577.397..14595.112 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1555100.14..1555100.35 rows=2 width=8) (actual time=14553.414..14595.102 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1554100.14..1554100.15 rows=1 width=8) (actual time=14554.534..14554.537 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=155186.60..1514562.73 rows=15814965 width=33) (actual time=777.663..14027.846 rows=12501160.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.094..1905.464 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1581508 width=4) (actual time=770.968..770.969 rows=1250116.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 179520kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1581508 width=4) (actual time=0.092..397.671 rows=1250116.00 loops=3)
+                                 Filter: (dval < '6'::text)
+                                 Rows Removed by Filter: 2083217
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.120 ms
+ Execution Time: 14595.225 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1555100.36..1555100.37 rows=1 width=8) (actual time=14429.509..14447.350 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1555100.14..1555100.35 rows=2 width=8) (actual time=14429.481..14447.342 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1554100.14..1554100.15 rows=1 width=8) (actual time=14409.638..14409.642 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=155186.60..1514562.73 rows=15814965 width=33) (actual time=753.761..13866.056 rows=12501160.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.143..1884.049 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1581508 width=4) (actual time=747.007..747.008 rows=1250116.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 179552kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1581508 width=4) (actual time=0.017..374.490 rows=1250116.00 loops=3)
+                                 Filter: (dval < '6'::text)
+                                 Rows Removed by Filter: 2083217
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.820 ms
+ Execution Time: 14447.458 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1555100.36..1555100.37 rows=1 width=8) (actual time=14485.733..14503.603 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1555100.14..1555100.35 rows=2 width=8) (actual time=14485.707..14503.595 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1554100.14..1554100.15 rows=1 width=8) (actual time=14466.005..14466.009 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=155186.60..1514562.73 rows=15814965 width=33) (actual time=751.000..13918.207 rows=12501160.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.126..1884.145 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1581508 width=4) (actual time=744.312..744.313 rows=1250116.00 loops=3)
+                           Buckets: 4194304  Batches: 1  Memory Usage: 179520kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1581508 width=4) (actual time=0.019..374.143 rows=1250116.00 loops=3)
+                                 Filter: (dval < '6'::text)
+                                 Rows Removed by Filter: 2083217
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.783 ms
+ Execution Time: 14503.710 ms
+(24 rows)
+
+
+  Average Time: 14515.46 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < '7' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < '7' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1564537.68..1564537.69 rows=1 width=8) (actual time=13122.444..13143.454 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1564537.47..1564537.68 rows=2 width=8) (actual time=13122.420..13143.445 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1563537.47..1563537.48 rows=1 width=8) (actual time=13094.475..13094.508 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=158332.39..1517708.52 rows=18331580 width=33) (actual time=1001.963..12482.322 rows=14582086.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.096..4074.533 rows=23854036.67 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1833171 width=4) (actual time=988.500..988.501 rows=1458208.67 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 236736kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1833171 width=4) (actual time=0.115..409.587 rows=1458208.67 loops=3)
+                                 Filter: (dval < '7'::text)
+                                 Rows Removed by Filter: 1875125
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.064 ms
+ Execution Time: 13143.548 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1564537.68..1564537.69 rows=1 width=8) (actual time=13048.352..13069.478 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1564537.47..1564537.68 rows=2 width=8) (actual time=13017.226..13069.468 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1563537.47..1563537.48 rows=1 width=8) (actual time=13015.857..13015.888 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=158332.39..1517708.52 rows=18331580 width=33) (actual time=970.267..12412.226 rows=14582086.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.141..4034.746 rows=23854036.67 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1833171 width=4) (actual time=956.654..956.655 rows=1458208.67 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 236704kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1833171 width=4) (actual time=0.018..385.059 rows=1458208.67 loops=3)
+                                 Filter: (dval < '7'::text)
+                                 Rows Removed by Filter: 1875125
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.766 ms
+ Execution Time: 13069.572 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1564537.68..1564537.69 rows=1 width=8) (actual time=13140.260..13161.366 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1564537.47..1564537.68 rows=2 width=8) (actual time=13109.413..13161.356 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1563537.47..1563537.48 rows=1 width=8) (actual time=13107.935..13107.967 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=158332.39..1517708.52 rows=18331580 width=33) (actual time=971.120..12505.240 rows=14582086.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.122..4086.553 rows=23854036.67 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1833171 width=4) (actual time=957.435..957.436 rows=1458208.67 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 236704kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1833171 width=4) (actual time=0.019..384.492 rows=1458208.67 loops=3)
+                                 Filter: (dval < '7'::text)
+                                 Rows Removed by Filter: 1875125
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.749 ms
+ Execution Time: 13161.464 ms
+(24 rows)
+
+
+  Average Time: 13124.86 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < '7' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1564537.68..1564537.69 rows=1 width=8) (actual time=14600.460..14621.669 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1564537.47..1564537.68 rows=2 width=8) (actual time=14600.434..14621.659 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1563537.47..1563537.48 rows=1 width=8) (actual time=14572.282..14572.285 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=158332.39..1517708.52 rows=18331580 width=33) (actual time=901.650..13962.834 rows=14582086.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.136..1919.835 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1833171 width=4) (actual time=888.629..888.630 rows=1458208.67 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 236704kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1833171 width=4) (actual time=0.105..418.789 rows=1458208.67 loops=3)
+                                 Filter: (dval < '7'::text)
+                                 Rows Removed by Filter: 1875125
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.094 ms
+ Execution Time: 14621.783 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1564537.68..1564537.69 rows=1 width=8) (actual time=13620.129..13641.333 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1564537.47..1564537.68 rows=2 width=8) (actual time=13620.102..13641.324 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1563537.47..1563537.48 rows=1 width=8) (actual time=13591.642..13591.645 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=158332.39..1517708.52 rows=18331580 width=33) (actual time=833.784..12973.106 rows=14582086.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.135..1863.813 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1833171 width=4) (actual time=820.633..820.634 rows=1458208.67 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 236736kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1833171 width=4) (actual time=0.018..381.026 rows=1458208.67 loops=3)
+                                 Filter: (dval < '7'::text)
+                                 Rows Removed by Filter: 1875125
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.778 ms
+ Execution Time: 13641.444 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1564537.68..1564537.69 rows=1 width=8) (actual time=13528.282..13549.159 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1564537.47..1564537.68 rows=2 width=8) (actual time=13528.257..13549.151 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1563537.47..1563537.48 rows=1 width=8) (actual time=13500.248..13500.252 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=158332.39..1517708.52 rows=18331580 width=33) (actual time=833.074..12884.740 rows=14582086.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.130..1853.756 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=1833171 width=4) (actual time=819.909..819.910 rows=1458208.67 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 236736kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=1833171 width=4) (actual time=0.021..380.497 rows=1458208.67 loops=3)
+                                 Filter: (dval < '7'::text)
+                                 Rows Removed by Filter: 1875125
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.789 ms
+ Execution Time: 13549.272 ms
+(24 rows)
+
+
+  Average Time: 13937.50 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < '8' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < '8' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1575339.39..1575339.40 rows=1 width=8) (actual time=12557.189..12582.810 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1575339.17..1575339.38 rows=2 width=8) (actual time=12522.933..12582.800 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1574339.17..1574339.18 rows=1 width=8) (actual time=12522.478..12522.536 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=161932.98..1521309.11 rows=21212026 width=33) (actual time=1098.108..11796.841 rows=16663783.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.093..4143.475 rows=20112740.00 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2121218 width=4) (actual time=1084.262..1084.262 rows=1666378.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 261184kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2121218 width=4) (actual time=0.116..415.325 rows=1666378.33 loops=3)
+                                 Filter: (dval < '8'::text)
+                                 Rows Removed by Filter: 1666955
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.079 ms
+ Execution Time: 12582.909 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1575339.39..1575339.40 rows=1 width=8) (actual time=13243.890..13269.088 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1575339.17..1575339.38 rows=2 width=8) (actual time=13210.135..13269.079 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1574339.17..1574339.18 rows=1 width=8) (actual time=13209.994..13210.051 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=161932.98..1521309.11 rows=21212026 width=33) (actual time=1063.948..12487.609 rows=16663783.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.126..4681.908 rows=20112740.00 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2121218 width=4) (actual time=1050.338..1050.339 rows=1666378.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 261152kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2121218 width=4) (actual time=0.020..388.682 rows=1666378.33 loops=3)
+                                 Filter: (dval < '8'::text)
+                                 Rows Removed by Filter: 1666955
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.759 ms
+ Execution Time: 13269.201 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1575339.39..1575339.40 rows=1 width=8) (actual time=12403.432..12429.121 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1575339.17..1575339.38 rows=2 width=8) (actual time=12369.605..12429.112 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1574339.17..1574339.18 rows=1 width=8) (actual time=12369.224..12369.289 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=161932.98..1521309.11 rows=21212026 width=33) (actual time=1055.756..11647.674 rows=16663783.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.135..4092.512 rows=20112740.00 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2121218 width=4) (actual time=1041.925..1041.926 rows=1666378.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 261152kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2121218 width=4) (actual time=0.020..388.399 rows=1666378.33 loops=3)
+                                 Filter: (dval < '8'::text)
+                                 Rows Removed by Filter: 1666955
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.773 ms
+ Execution Time: 12429.217 ms
+(24 rows)
+
+
+  Average Time: 12760.44 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < '8' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1575339.39..1575339.40 rows=1 width=8) (actual time=14165.498..14190.623 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1575339.17..1575339.38 rows=2 width=8) (actual time=14131.938..14190.613 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1574339.17..1574339.18 rows=1 width=8) (actual time=14131.430..14131.434 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=161932.98..1521309.11 rows=21212026 width=33) (actual time=938.346..13414.742 rows=16663783.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.100..1867.199 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2121218 width=4) (actual time=925.488..925.488 rows=1666378.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 261152kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2121218 width=4) (actual time=0.124..422.064 rows=1666378.33 loops=3)
+                                 Filter: (dval < '8'::text)
+                                 Rows Removed by Filter: 1666955
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=169 read=43
+ Planning Time: 1.095 ms
+ Execution Time: 14190.750 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1575339.39..1575339.40 rows=1 width=8) (actual time=14130.383..14155.473 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1575339.17..1575339.38 rows=2 width=8) (actual time=14096.859..14155.464 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1574339.17..1574339.18 rows=1 width=8) (actual time=14096.318..14096.325 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=161932.98..1521309.11 rows=21212026 width=33) (actual time=911.896..13387.202 rows=16663783.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.126..1849.773 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2121218 width=4) (actual time=898.935..898.940 rows=1666378.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 261152kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2121218 width=4) (actual time=0.019..397.262 rows=1666378.33 loops=3)
+                                 Filter: (dval < '8'::text)
+                                 Rows Removed by Filter: 1666955
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.788 ms
+ Execution Time: 14155.581 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1575339.39..1575339.40 rows=1 width=8) (actual time=14066.782..14092.293 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1575339.17..1575339.38 rows=2 width=8) (actual time=14066.757..14092.285 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1574339.17..1574339.18 rows=1 width=8) (actual time=14037.519..14037.523 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=161932.98..1521309.11 rows=21212026 width=33) (actual time=912.097..13326.487 rows=16663783.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.123..1843.946 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2121218 width=4) (actual time=899.362..899.363 rows=1666378.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 261120kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2121218 width=4) (actual time=0.016..397.991 rows=1666378.33 loops=3)
+                                 Filter: (dval < '8'::text)
+                                 Rows Removed by Filter: 1666955
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.774 ms
+ Execution Time: 14092.397 ms
+(24 rows)
+
+
+  Average Time: 14146.24 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < '9' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < '9' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1584718.29..1584718.30 rows=1 width=8) (actual time=13740.856..13766.893 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1584718.07..1584718.28 rows=2 width=8) (actual time=13740.829..13766.884 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1583718.07..1583718.08 rows=1 width=8) (actual time=13709.361..13709.420 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=165059.29..1524435.42 rows=23713062 width=33) (actual time=1159.977..12906.726 rows=18744033.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.110..4291.661 rows=22473176.67 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2371323 width=4) (actual time=1146.269..1146.271 rows=1874403.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 285536kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2371323 width=4) (actual time=0.145..421.557 rows=1874403.33 loops=3)
+                                 Filter: (dval < '9'::text)
+                                 Rows Removed by Filter: 1458930
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.082 ms
+ Execution Time: 13766.986 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1584718.29..1584718.30 rows=1 width=8) (actual time=13332.018..13357.498 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1584718.07..1584718.28 rows=2 width=8) (actual time=13295.291..13357.490 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1583718.07..1583718.08 rows=1 width=8) (actual time=13295.790..13295.842 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=165059.29..1524435.42 rows=23713062 width=33) (actual time=1130.231..12490.612 rows=18744033.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.136..4108.867 rows=22473176.67 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2371323 width=4) (actual time=1116.428..1116.429 rows=1874403.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 285600kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2371323 width=4) (actual time=0.018..396.528 rows=1874403.33 loops=3)
+                                 Filter: (dval < '9'::text)
+                                 Rows Removed by Filter: 1458930
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.774 ms
+ Execution Time: 13357.592 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1584718.29..1584718.30 rows=1 width=8) (actual time=12762.863..12788.130 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1584718.07..1584718.28 rows=2 width=8) (actual time=12727.698..12788.123 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1583718.07..1583718.08 rows=1 width=8) (actual time=12727.851..12727.901 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=165059.29..1524435.42 rows=23713062 width=33) (actual time=1094.898..11928.707 rows=18744033.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.133..3912.429 rows=22473176.67 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2371323 width=4) (actual time=1081.333..1081.334 rows=1874403.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 285568kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2371323 width=4) (actual time=0.016..394.789 rows=1874403.33 loops=3)
+                                 Filter: (dval < '9'::text)
+                                 Rows Removed by Filter: 1458930
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.768 ms
+ Execution Time: 12788.217 ms
+(24 rows)
+
+
+  Average Time: 13304.26 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < '9' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1584718.29..1584718.30 rows=1 width=8) (actual time=13244.297..13269.279 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1584718.07..1584718.28 rows=2 width=8) (actual time=13244.286..13269.272 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1583718.07..1583718.08 rows=1 width=8) (actual time=13207.383..13207.386 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=165059.29..1524435.42 rows=23713062 width=33) (actual time=958.682..12431.672 rows=18744033.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.088..1688.676 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2371323 width=4) (actual time=946.170..946.171 rows=1874403.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 285568kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2371323 width=4) (actual time=0.098..422.670 rows=1874403.33 loops=3)
+                                 Filter: (dval < '9'::text)
+                                 Rows Removed by Filter: 1458930
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.067 ms
+ Execution Time: 13269.381 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1584718.29..1584718.30 rows=1 width=8) (actual time=13288.446..13313.598 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1584718.07..1584718.28 rows=2 width=8) (actual time=13288.423..13313.592 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1583718.07..1583718.08 rows=1 width=8) (actual time=13257.232..13257.235 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=165059.29..1524435.42 rows=23713062 width=33) (actual time=912.748..12479.177 rows=18744033.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.132..1699.909 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2371323 width=4) (actual time=900.233..900.234 rows=1874403.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 285568kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2371323 width=4) (actual time=0.014..398.362 rows=1874403.33 loops=3)
+                                 Filter: (dval < '9'::text)
+                                 Rows Removed by Filter: 1458930
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.729 ms
+ Execution Time: 13313.694 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1584718.29..1584718.30 rows=1 width=8) (actual time=13278.034..13302.968 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1584718.07..1584718.28 rows=2 width=8) (actual time=13242.866..13302.961 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1583718.07..1583718.08 rows=1 width=8) (actual time=13243.473..13243.476 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=165059.29..1524435.42 rows=23713062 width=33) (actual time=914.166..12469.578 rows=18744033.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.120..1698.509 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2371323 width=4) (actual time=901.866..901.867 rows=1874403.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 285600kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2371323 width=4) (actual time=0.015..398.580 rows=1874403.33 loops=3)
+                                 Filter: (dval < '9'::text)
+                                 Rows Removed by Filter: 1458930
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.722 ms
+ Execution Time: 13303.080 ms
+(24 rows)
+
+
+  Average Time: 13295.39 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < 'a' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < 'a' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1594230.98..1594230.99 rows=1 width=8) (actual time=13470.955..13496.645 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1594230.76..1594230.97 rows=2 width=8) (actual time=13430.990..13496.637 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1593230.76..1593230.77 rows=1 width=8) (actual time=13432.771..13432.824 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=168230.20..1527606.33 rows=26249773 width=33) (actual time=1161.471..12567.707 rows=20828370.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.089..3905.066 rows=24643153.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2624996 width=4) (actual time=1148.031..1148.032 rows=2082837.00 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 310048kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2624996 width=4) (actual time=0.127..423.788 rows=2082837.00 loops=3)
+                                 Filter: (dval < 'a'::text)
+                                 Rows Removed by Filter: 1250496
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.084 ms
+ Execution Time: 13496.757 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1594230.98..1594230.99 rows=1 width=8) (actual time=13393.128..13419.051 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1594230.76..1594230.97 rows=2 width=8) (actual time=13354.037..13419.044 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1593230.76..1593230.77 rows=1 width=8) (actual time=13355.400..13355.452 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=168230.20..1527606.33 rows=26249773 width=33) (actual time=1131.227..12481.372 rows=20828370.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.129..3882.771 rows=24643153.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2624996 width=4) (actual time=1117.707..1117.708 rows=2082837.00 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 310048kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2624996 width=4) (actual time=0.016..403.335 rows=2082837.00 loops=3)
+                                 Filter: (dval < 'a'::text)
+                                 Rows Removed by Filter: 1250496
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.727 ms
+ Execution Time: 13419.159 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1594230.98..1594230.99 rows=1 width=8) (actual time=13331.036..13356.593 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1594230.76..1594230.97 rows=2 width=8) (actual time=13293.137..13356.585 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1593230.76..1593230.77 rows=1 width=8) (actual time=13294.548..13294.597 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=168230.20..1527606.33 rows=26249773 width=33) (actual time=1112.041..12414.828 rows=20828370.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.135..3851.073 rows=24643153.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2624996 width=4) (actual time=1098.841..1098.842 rows=2082837.00 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 310048kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2624996 width=4) (actual time=0.015..401.826 rows=2082837.00 loops=3)
+                                 Filter: (dval < 'a'::text)
+                                 Rows Removed by Filter: 1250496
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.726 ms
+ Execution Time: 13356.674 ms
+(24 rows)
+
+
+  Average Time: 13424.20 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < 'a' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1594230.98..1594230.99 rows=1 width=8) (actual time=13785.722..13811.216 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1594230.76..1594230.97 rows=2 width=8) (actual time=13746.880..13811.208 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1593230.76..1593230.77 rows=1 width=8) (actual time=13748.348..13748.351 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=168230.20..1527606.33 rows=26249773 width=33) (actual time=1011.032..12895.383 rows=20828370.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.080..1707.380 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2624996 width=4) (actual time=998.548..998.549 rows=2082837.00 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 310016kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2624996 width=4) (actual time=0.107..423.175 rows=2082837.00 loops=3)
+                                 Filter: (dval < 'a'::text)
+                                 Rows Removed by Filter: 1250496
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.060 ms
+ Execution Time: 13811.309 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1594230.98..1594230.99 rows=1 width=8) (actual time=13717.977..13743.396 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1594230.76..1594230.97 rows=2 width=8) (actual time=13679.352..13743.388 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1593230.76..1593230.77 rows=1 width=8) (actual time=13680.952..13680.955 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=168230.20..1527606.33 rows=26249773 width=33) (actual time=961.627..12825.470 rows=20828370.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.119..1714.123 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2624996 width=4) (actual time=949.274..949.275 rows=2082837.00 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 310048kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2624996 width=4) (actual time=0.015..399.094 rows=2082837.00 loops=3)
+                                 Filter: (dval < 'a'::text)
+                                 Rows Removed by Filter: 1250496
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.730 ms
+ Execution Time: 13743.485 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1594230.98..1594230.99 rows=1 width=8) (actual time=13763.357..13788.703 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1594230.76..1594230.97 rows=2 width=8) (actual time=13725.084..13788.694 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1593230.76..1593230.77 rows=1 width=8) (actual time=13726.381..13726.385 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=168230.20..1527606.33 rows=26249773 width=33) (actual time=968.656..12869.651 rows=20828370.00 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.122..1722.640 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2624996 width=4) (actual time=956.095..956.096 rows=2082837.00 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 310016kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2624996 width=4) (actual time=0.016..399.742 rows=2082837.00 loops=3)
+                                 Filter: (dval < 'a'::text)
+                                 Rows Removed by Filter: 1250496
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.744 ms
+ Execution Time: 13788.792 ms
+(24 rows)
+
+
+  Average Time: 13781.20 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < 'b' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < 'b' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1603557.93..1603557.94 rows=1 width=8) (actual time=14409.248..14442.516 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1603557.72..1603557.93 rows=2 width=8) (actual time=14367.038..14442.509 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1602557.72..1602557.73 rows=1 width=8) (actual time=14369.447..14369.498 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=171339.20..1530715.33 rows=28736955 width=33) (actual time=1253.307..13422.748 rows=22911443.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.087..3940.880 rows=26605683.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2873716 width=4) (actual time=1239.961..1239.962 rows=2291144.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 334464kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2873716 width=4) (actual time=0.123..425.042 rows=2291144.33 loops=3)
+                                 Filter: (dval < 'b'::text)
+                                 Rows Removed by Filter: 1042189
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.069 ms
+ Execution Time: 14442.607 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1603557.93..1603557.94 rows=1 width=8) (actual time=14406.437..14440.621 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1603557.72..1603557.93 rows=2 width=8) (actual time=14364.267..14440.614 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1602557.72..1602557.73 rows=1 width=8) (actual time=14366.615..14366.666 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=171339.20..1530715.33 rows=28736955 width=33) (actual time=1218.405..13426.361 rows=22911443.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.110..3968.159 rows=26605683.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2873716 width=4) (actual time=1204.955..1204.956 rows=2291144.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 334496kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2873716 width=4) (actual time=0.017..404.217 rows=2291144.33 loops=3)
+                                 Filter: (dval < 'b'::text)
+                                 Rows Removed by Filter: 1042189
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.726 ms
+ Execution Time: 14440.708 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1603557.93..1603557.94 rows=1 width=8) (actual time=14493.227..14528.537 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1603557.72..1603557.93 rows=2 width=8) (actual time=14448.948..14528.527 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1602557.72..1602557.73 rows=1 width=8) (actual time=14452.260..14452.320 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=171339.20..1530715.33 rows=28736955 width=33) (actual time=1203.655..13508.745 rows=22911443.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.128..3949.261 rows=26605683.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2873716 width=4) (actual time=1190.479..1190.480 rows=2291144.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 334464kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2873716 width=4) (actual time=0.015..403.334 rows=2291144.33 loops=3)
+                                 Filter: (dval < 'b'::text)
+                                 Rows Removed by Filter: 1042189
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.707 ms
+ Execution Time: 14528.632 ms
+(24 rows)
+
+
+  Average Time: 14470.65 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < 'b' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1603557.93..1603557.94 rows=1 width=8) (actual time=15073.256..15107.269 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1603557.72..1603557.93 rows=2 width=8) (actual time=15073.231..15107.262 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1602557.72..1602557.73 rows=1 width=8) (actual time=15039.234..15039.237 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=171339.20..1530715.33 rows=28736955 width=33) (actual time=1090.285..14094.815 rows=22911443.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.084..1788.519 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2873716 width=4) (actual time=1077.805..1077.806 rows=2291144.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 334432kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2873716 width=4) (actual time=0.100..428.167 rows=2291144.33 loops=3)
+                                 Filter: (dval < 'b'::text)
+                                 Rows Removed by Filter: 1042189
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.080 ms
+ Execution Time: 15107.371 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1603557.93..1603557.94 rows=1 width=8) (actual time=15088.781..15123.921 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1603557.72..1603557.93 rows=2 width=8) (actual time=15088.753..15123.913 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1602557.72..1602557.73 rows=1 width=8) (actual time=15046.431..15046.434 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=171339.20..1530715.33 rows=28736955 width=33) (actual time=1038.911..14084.521 rows=22911443.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.124..1788.802 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2873716 width=4) (actual time=1026.601..1026.602 rows=2291144.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 334464kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2873716 width=4) (actual time=0.015..405.564 rows=2291144.33 loops=3)
+                                 Filter: (dval < 'b'::text)
+                                 Rows Removed by Filter: 1042189
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.755 ms
+ Execution Time: 15124.027 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1603557.93..1603557.94 rows=1 width=8) (actual time=16134.134..16168.791 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1603557.72..1603557.93 rows=2 width=8) (actual time=16134.110..16168.783 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1602557.72..1602557.73 rows=1 width=8) (actual time=16097.059..16097.063 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=171339.20..1530715.33 rows=28736955 width=33) (actual time=1135.200..15133.237 rows=22911443.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.124..1878.663 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=2873716 width=4) (actual time=1121.000..1121.001 rows=2291144.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 334464kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=2873716 width=4) (actual time=0.018..415.895 rows=2291144.33 loops=3)
+                                 Filter: (dval < 'b'::text)
+                                 Rows Removed by Filter: 1042189
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.784 ms
+ Execution Time: 16168.899 ms
+(24 rows)
+
+
+  Average Time: 15466.77 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < 'c' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < 'c' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1612979.42..1612979.43 rows=1 width=8) (actual time=16632.982..16668.249 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1612979.21..1612979.42 rows=2 width=8) (actual time=16586.538..16668.240 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1611979.21..1611979.22 rows=1 width=8) (actual time=16588.987..16589.051 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=174479.71..1533855.84 rows=31249346 width=33) (actual time=1521.686..15529.608 rows=24989263.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.094..4299.302 rows=28347560.00 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3124957 width=4) (actual time=1507.065..1507.066 rows=2498926.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 358880kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3124957 width=4) (actual time=0.152..441.969 rows=2498926.33 loops=3)
+                                 Filter: (dval < 'c'::text)
+                                 Rows Removed by Filter: 834407
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.120 ms
+ Execution Time: 16668.342 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1612979.42..1612979.43 rows=1 width=8) (actual time=16394.028..16429.145 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1612979.21..1612979.42 rows=2 width=8) (actual time=16345.559..16429.136 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1611979.21..1611979.22 rows=1 width=8) (actual time=16349.955..16350.014 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=174479.71..1533855.84 rows=31249346 width=33) (actual time=1347.334..15277.400 rows=24989263.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.145..4230.129 rows=28347560.00 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3124957 width=4) (actual time=1333.742..1333.743 rows=2498926.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 358848kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3124957 width=4) (actual time=0.017..405.249 rows=2498926.33 loops=3)
+                                 Filter: (dval < 'c'::text)
+                                 Rows Removed by Filter: 834407
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.788 ms
+ Execution Time: 16429.235 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1612979.42..1612979.43 rows=1 width=8) (actual time=17343.051..17378.543 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1612979.21..1612979.42 rows=2 width=8) (actual time=17294.934..17378.533 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1611979.21..1611979.22 rows=1 width=8) (actual time=17298.582..17298.644 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=174479.71..1533855.84 rows=31249346 width=33) (actual time=1380.996..16222.732 rows=24989263.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.136..4678.557 rows=28347560.00 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3124957 width=4) (actual time=1366.985..1366.986 rows=2498926.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 358880kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3124957 width=4) (actual time=0.018..407.192 rows=2498926.33 loops=3)
+                                 Filter: (dval < 'c'::text)
+                                 Rows Removed by Filter: 834407
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.771 ms
+ Execution Time: 17378.633 ms
+(24 rows)
+
+
+  Average Time: 16825.40 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < 'c' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1612979.42..1612979.43 rows=1 width=8) (actual time=14895.448..14929.920 rows=1.00 loops=1)
+   Buffers: shared read=916668
+   ->  Gather  (cost=1612979.21..1612979.42 rows=2 width=8) (actual time=14849.930..14929.912 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668
+         ->  Partial Aggregate  (cost=1611979.21..1611979.22 rows=1 width=8) (actual time=14852.765..14852.769 rows=1.00 loops=3)
+               Buffers: shared read=916668
+               ->  Parallel Hash Join  (cost=174479.71..1533855.84 rows=31249346 width=33) (actual time=1198.892..13823.063 rows=24989263.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.095..1724.987 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3124957 width=4) (actual time=1185.832..1185.833 rows=2498926.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 358848kB
+                           Buffers: shared read=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3124957 width=4) (actual time=0.097..438.334 rows=2498926.33 loops=3)
+                                 Filter: (dval < 'c'::text)
+                                 Rows Removed by Filter: 834407
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.107 ms
+ Execution Time: 14930.015 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1612979.42..1612979.43 rows=1 width=8) (actual time=14650.871..14685.174 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470
+   ->  Gather  (cost=1612979.21..1612979.42 rows=2 width=8) (actual time=14606.097..14685.166 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470
+         ->  Partial Aggregate  (cost=1611979.21..1611979.22 rows=1 width=8) (actual time=14609.147..14609.151 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470
+               ->  Parallel Hash Join  (cost=174479.71..1533855.84 rows=31249346 width=33) (actual time=1086.331..13575.696 rows=24989263.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.139..1718.408 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3124957 width=4) (actual time=1073.732..1073.733 rows=2498926.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 358848kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3124957 width=4) (actual time=0.014..405.192 rows=2498926.33 loops=3)
+                                 Filter: (dval < 'c'::text)
+                                 Rows Removed by Filter: 834407
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.743 ms
+ Execution Time: 14685.261 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=1612979.42..1612979.43 rows=1 width=8) (actual time=14803.879..14838.500 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606
+   ->  Gather  (cost=1612979.21..1612979.42 rows=2 width=8) (actual time=14803.853..14838.492 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606
+         ->  Partial Aggregate  (cost=1611979.21..1611979.22 rows=1 width=8) (actual time=14768.562..14768.566 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606
+               ->  Parallel Hash Join  (cost=174479.71..1533855.84 rows=31249346 width=33) (actual time=1077.407..13724.790 rows=24989263.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.124..1748.415 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3124957 width=4) (actual time=1065.097..1065.098 rows=2498926.33 loops=3)
+                           Buckets: 8388608  Batches: 1  Memory Usage: 358848kB
+                           Buffers: shared hit=83334
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3124957 width=4) (actual time=0.013..404.634 rows=2498926.33 loops=3)
+                                 Filter: (dval < 'c'::text)
+                                 Rows Removed by Filter: 834407
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.699 ms
+ Execution Time: 14838.609 ms
+(24 rows)
+
+
+  Average Time: 14817.96 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < 'd' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < 'd' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2301488.49..2301488.50 rows=1 width=8) (actual time=21219.994..21984.629 rows=1.00 loops=1)
+   Buffers: shared read=916668, temp read=674778 written=674820
+   ->  Gather  (cost=2301488.27..2301488.48 rows=2 width=8) (actual time=21202.444..21984.622 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668, temp read=674778 written=674820
+         ->  Partial Aggregate  (cost=2300488.27..2300488.28 rows=1 width=8) (actual time=21201.289..21204.220 rows=1.00 loops=3)
+               Buffers: shared read=916668, temp read=674778 written=674820
+               ->  Parallel Hash Join  (cost=191412.09..2215164.22 rows=34129621 width=33) (actual time=12041.297..20079.578 rows=27075003.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668, temp read=674778 written=674820
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.086..4686.495 rows=29889846.67 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3412987 width=4) (actual time=1085.771..1085.772 rows=2707500.33 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 112288kB
+                           Buffers: shared read=83334, temp written=17872
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3412987 width=4) (actual time=0.120..431.455 rows=2707500.33 loops=3)
+                                 Filter: (dval < 'd'::text)
+                                 Rows Removed by Filter: 625833
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=170 read=43
+ Planning Time: 1.088 ms
+ Execution Time: 21984.728 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2301488.49..2301488.50 rows=1 width=8) (actual time=21067.342..21824.805 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470, temp read=674780 written=674816
+   ->  Gather  (cost=2301488.27..2301488.48 rows=2 width=8) (actual time=21067.327..21824.798 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470, temp read=674780 written=674816
+         ->  Partial Aggregate  (cost=2300488.27..2300488.28 rows=1 width=8) (actual time=21048.952..21049.016 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470, temp read=674780 written=674816
+               ->  Parallel Hash Join  (cost=191412.09..2215164.22 rows=34129621 width=33) (actual time=12143.423..19920.149 rows=27075003.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470, temp read=674780 written=674816
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.125..4764.184 rows=29889846.67 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3412987 width=4) (actual time=1063.135..1063.136 rows=2707500.33 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 112288kB
+                           Buffers: shared hit=83334, temp written=17868
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3412987 width=4) (actual time=0.014..411.479 rows=2707500.33 loops=3)
+                                 Filter: (dval < 'd'::text)
+                                 Rows Removed by Filter: 625833
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.754 ms
+ Execution Time: 21824.895 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2301488.49..2301488.50 rows=1 width=8) (actual time=20925.785..21682.372 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606, temp read=674780 written=674816
+   ->  Gather  (cost=2301488.27..2301488.48 rows=2 width=8) (actual time=20908.669..21682.365 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606, temp read=674780 written=674816
+         ->  Partial Aggregate  (cost=2300488.27..2300488.28 rows=1 width=8) (actual time=20907.380..20909.907 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606, temp read=674780 written=674816
+               ->  Parallel Hash Join  (cost=191412.09..2215164.22 rows=34129621 width=33) (actual time=12008.803..19790.925 rows=27075003.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606, temp read=674780 written=674816
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.151..4679.800 rows=29889846.67 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3412987 width=4) (actual time=1055.289..1055.290 rows=2707500.33 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 112320kB
+                           Buffers: shared hit=83334, temp written=17872
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3412987 width=4) (actual time=0.013..409.553 rows=2707500.33 loops=3)
+                                 Filter: (dval < 'd'::text)
+                                 Rows Removed by Filter: 625833
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.777 ms
+ Execution Time: 21682.469 ms
+(24 rows)
+
+
+  Average Time: 21830.70 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < 'd' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2301488.49..2301488.50 rows=1 width=8) (actual time=20713.685..21548.425 rows=1.00 loops=1)
+   Buffers: shared read=916668, temp read=750459 written=750488
+   ->  Gather  (cost=2301488.27..2301488.48 rows=2 width=8) (actual time=20696.870..21548.416 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668, temp read=750459 written=750488
+         ->  Partial Aggregate  (cost=2300488.27..2300488.28 rows=1 width=8) (actual time=20695.386..20697.965 rows=1.00 loops=3)
+               Buffers: shared read=916668, temp read=750459 written=750488
+               ->  Parallel Hash Join  (cost=191412.09..2215164.22 rows=34129621 width=33) (actual time=11017.150..19550.387 rows=27075003.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668, temp read=750459 written=750488
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.078..3265.092 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3412987 width=4) (actual time=878.109..878.109 rows=2707500.33 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 112288kB
+                           Buffers: shared read=83334, temp written=17868
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3412987 width=4) (actual time=0.098..428.877 rows=2707500.33 loops=3)
+                                 Filter: (dval < 'd'::text)
+                                 Rows Removed by Filter: 625833
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.093 ms
+ Execution Time: 21548.535 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2301488.49..2301488.50 rows=1 width=8) (actual time=20598.585..21430.593 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470, temp read=750459 written=750492
+   ->  Gather  (cost=2301488.27..2301488.48 rows=2 width=8) (actual time=20598.571..21430.585 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470, temp read=750459 written=750492
+         ->  Partial Aggregate  (cost=2300488.27..2300488.28 rows=1 width=8) (actual time=20580.345..20580.348 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470, temp read=750459 written=750492
+               ->  Parallel Hash Join  (cost=191412.09..2215164.22 rows=34129621 width=33) (actual time=10973.073..19450.941 rows=27075003.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470, temp read=750459 written=750492
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.139..3250.314 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3412987 width=4) (actual time=845.153..845.153 rows=2707500.33 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 112320kB
+                           Buffers: shared hit=83334, temp written=17868
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3412987 width=4) (actual time=0.012..407.178 rows=2707500.33 loops=3)
+                                 Filter: (dval < 'd'::text)
+                                 Rows Removed by Filter: 625833
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.754 ms
+ Execution Time: 21430.698 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2301488.49..2301488.50 rows=1 width=8) (actual time=20643.672..21474.205 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606, temp read=750460 written=750488
+   ->  Gather  (cost=2301488.27..2301488.48 rows=2 width=8) (actual time=20632.580..21474.198 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606, temp read=750460 written=750488
+         ->  Partial Aggregate  (cost=2300488.27..2300488.28 rows=1 width=8) (actual time=20630.211..20632.936 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606, temp read=750460 written=750488
+               ->  Parallel Hash Join  (cost=191412.09..2215164.22 rows=34129621 width=33) (actual time=10977.091..19516.513 rows=27075003.33 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606, temp read=750460 written=750488
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.138..3247.986 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3412987 width=4) (actual time=843.904..843.905 rows=2707500.33 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 112288kB
+                           Buffers: shared hit=83334, temp written=17864
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3412987 width=4) (actual time=0.013..407.284 rows=2707500.33 loops=3)
+                                 Filter: (dval < 'd'::text)
+                                 Rows Removed by Filter: 625833
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.756 ms
+ Execution Time: 21474.308 ms
+(24 rows)
+
+
+  Average Time: 21484.51 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < 'e' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < 'e' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2312896.07..2312896.08 rows=1 width=8) (actual time=22760.702..23536.512 rows=1.00 loops=1)
+   Buffers: shared read=916668, temp read=705499 written=705536
+   ->  Gather  (cost=2312895.86..2312896.07 rows=2 width=8) (actual time=22742.633..23536.505 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668, temp read=705499 written=705536
+         ->  Partial Aggregate  (cost=2311895.86..2311895.87 rows=1 width=8) (actual time=22741.738..22745.023 rows=1.00 loops=3)
+               Buffers: shared read=916668, temp read=705499 written=705536
+               ->  Parallel Hash Join  (cost=195542.62..2220278.76 rows=36646840 width=33) (actual time=12755.857..21502.251 rows=29158906.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668, temp read=705499 written=705536
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.087..4895.381 rows=31225086.67 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3664710 width=4) (actual time=1190.429..1190.430 rows=2915890.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 118432kB
+                           Buffers: shared read=83334, temp written=19244
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3664710 width=4) (actual time=0.101..466.211 rows=2915890.67 loops=3)
+                                 Filter: (dval < 'e'::text)
+                                 Rows Removed by Filter: 417443
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.071 ms
+ Execution Time: 23536.605 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2312896.07..2312896.08 rows=1 width=8) (actual time=22671.569..23491.901 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470, temp read=705499 written=705532
+   ->  Gather  (cost=2312895.86..2312896.07 rows=2 width=8) (actual time=22658.140..23491.893 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470, temp read=705499 written=705532
+         ->  Partial Aggregate  (cost=2311895.86..2311895.87 rows=1 width=8) (actual time=22656.123..22659.982 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470, temp read=705499 written=705532
+               ->  Parallel Hash Join  (cost=195542.62..2220278.76 rows=36646840 width=33) (actual time=12688.025..21408.174 rows=29158906.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470, temp read=705499 written=705532
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.127..4957.512 rows=31225086.67 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3664710 width=4) (actual time=1100.146..1100.147 rows=2915890.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 118432kB
+                           Buffers: shared hit=83334, temp written=19240
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3664710 width=4) (actual time=0.013..412.863 rows=2915890.67 loops=3)
+                                 Filter: (dval < 'e'::text)
+                                 Rows Removed by Filter: 417443
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.758 ms
+ Execution Time: 23491.989 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2312896.07..2312896.08 rows=1 width=8) (actual time=22694.473..23495.938 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606, temp read=705499 written=705520
+   ->  Gather  (cost=2312895.86..2312896.07 rows=2 width=8) (actual time=22681.326..23495.930 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606, temp read=705499 written=705520
+         ->  Partial Aggregate  (cost=2311895.86..2311895.87 rows=1 width=8) (actual time=22679.196..22683.050 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606, temp read=705499 written=705520
+               ->  Parallel Hash Join  (cost=195542.62..2220278.76 rows=36646840 width=33) (actual time=12715.167..21432.996 rows=29158906.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606, temp read=705499 written=705520
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.133..4981.209 rows=31225086.67 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3664710 width=4) (actual time=1094.223..1094.223 rows=2915890.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 118464kB
+                           Buffers: shared hit=83334, temp written=19236
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3664710 width=4) (actual time=0.015..413.004 rows=2915890.67 loops=3)
+                                 Filter: (dval < 'e'::text)
+                                 Rows Removed by Filter: 417443
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.757 ms
+ Execution Time: 23496.049 ms
+(24 rows)
+
+
+  Average Time: 23508.21 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < 'e' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2312896.07..2312896.08 rows=1 width=8) (actual time=21588.960..22456.789 rows=1.00 loops=1)
+   Buffers: shared read=916668, temp read=751832 written=751860
+   ->  Gather  (cost=2312895.86..2312896.07 rows=2 width=8) (actual time=21575.597..22456.780 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668, temp read=751832 written=751860
+         ->  Partial Aggregate  (cost=2311895.86..2311895.87 rows=1 width=8) (actual time=21573.710..21576.620 rows=1.00 loops=3)
+               Buffers: shared read=916668, temp read=751832 written=751860
+               ->  Parallel Hash Join  (cost=195542.62..2220278.76 rows=36646840 width=33) (actual time=11059.761..20366.519 rows=29158906.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668, temp read=751832 written=751860
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.082..3241.529 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3664710 width=4) (actual time=917.765..917.766 rows=2915890.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 118432kB
+                           Buffers: shared read=83334, temp written=19236
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3664710 width=4) (actual time=0.079..431.874 rows=2915890.67 loops=3)
+                                 Filter: (dval < 'e'::text)
+                                 Rows Removed by Filter: 417443
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.092 ms
+ Execution Time: 22456.906 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2312896.07..2312896.08 rows=1 width=8) (actual time=21378.084..22180.545 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470, temp read=751830 written=751864
+   ->  Gather  (cost=2312895.86..2312896.07 rows=2 width=8) (actual time=21378.071..22180.538 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470, temp read=751830 written=751864
+         ->  Partial Aggregate  (cost=2311895.86..2311895.87 rows=1 width=8) (actual time=21358.652..21358.655 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470, temp read=751830 written=751864
+               ->  Parallel Hash Join  (cost=195542.62..2220278.76 rows=36646840 width=33) (actual time=11055.569..20146.347 rows=29158906.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470, temp read=751830 written=751864
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.130..3248.410 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3664710 width=4) (actual time=896.672..896.672 rows=2915890.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 118400kB
+                           Buffers: shared hit=83334, temp written=19240
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3664710 width=4) (actual time=0.013..410.648 rows=2915890.67 loops=3)
+                                 Filter: (dval < 'e'::text)
+                                 Rows Removed by Filter: 417443
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.766 ms
+ Execution Time: 22180.650 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2312896.07..2312896.08 rows=1 width=8) (actual time=21553.615..22412.872 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606, temp read=751832 written=751856
+   ->  Gather  (cost=2312895.86..2312896.07 rows=2 width=8) (actual time=21534.336..22412.865 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606, temp read=751832 written=751856
+         ->  Partial Aggregate  (cost=2311895.86..2311895.87 rows=1 width=8) (actual time=21533.199..21535.743 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606, temp read=751832 written=751856
+               ->  Parallel Hash Join  (cost=195542.62..2220278.76 rows=36646840 width=33) (actual time=11003.430..20331.361 rows=29158906.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606, temp read=751832 written=751856
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.135..3231.356 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3664710 width=4) (actual time=880.110..880.111 rows=2915890.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 118400kB
+                           Buffers: shared hit=83334, temp written=19236
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3664710 width=4) (actual time=0.011..407.605 rows=2915890.67 loops=3)
+                                 Filter: (dval < 'e'::text)
+                                 Rows Removed by Filter: 417443
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.767 ms
+ Execution Time: 22412.978 ms
+(24 rows)
+
+
+  Average Time: 22350.18 ms | Avg Workers: 2.0
+Stopping server...
+
+=== Starting Study for Filter < 'f' ===
+Starting server: Bloom=True, Workers=2
+Benchmarking: Filter < 'f' | Bloom=True | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2324221.34..2324221.35 rows=1 width=8) (actual time=24097.312..24884.777 rows=1.00 loops=1)
+   Buffers: shared read=916668, temp read=731974 written=732008
+   ->  Gather  (cost=2324221.12..2324221.33 rows=2 width=8) (actual time=24077.752..24884.769 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668, temp read=731974 written=732008
+         ->  Partial Aggregate  (cost=2323221.12..2323221.13 rows=1 width=8) (actual time=24077.367..24080.330 rows=1.00 loops=3)
+               Buffers: shared read=916668, temp read=731974 written=732008
+               ->  Parallel Hash Join  (cost=199643.06..2225355.19 rows=39146372 width=33) (actual time=13267.189..22768.863 rows=31247996.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668, temp read=731974 written=732008
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.087..5226.570 rows=32366963.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3914665 width=4) (actual time=1204.090..1204.091 rows=3124799.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 124544kB
+                           Buffers: shared read=83334, temp written=20620
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3914665 width=4) (actual time=0.130..439.718 rows=3124799.67 loops=3)
+                                 Filter: (dval < 'f'::text)
+                                 Rows Removed by Filter: 208534
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.077 ms
+ Execution Time: 24884.907 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2324221.34..2324221.35 rows=1 width=8) (actual time=22981.890..23805.857 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470, temp read=731971 written=732008
+   ->  Gather  (cost=2324221.12..2324221.33 rows=2 width=8) (actual time=22961.684..23805.848 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470, temp read=731971 written=732008
+         ->  Partial Aggregate  (cost=2323221.12..2323221.13 rows=1 width=8) (actual time=22961.409..22964.341 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470, temp read=731971 written=732008
+               ->  Parallel Hash Join  (cost=199643.06..2225355.19 rows=39146372 width=33) (actual time=12883.336..21657.336 rows=31247996.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470, temp read=731971 written=732008
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.137..4902.140 rows=32366963.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3914665 width=4) (actual time=1187.060..1187.061 rows=3124799.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 124576kB
+                           Buffers: shared hit=83334, temp written=20620
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3914665 width=4) (actual time=0.014..416.731 rows=3124799.67 loops=3)
+                                 Filter: (dval < 'f'::text)
+                                 Rows Removed by Filter: 208534
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.760 ms
+ Execution Time: 23805.951 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2324221.34..2324221.35 rows=1 width=8) (actual time=22858.769..23616.523 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606, temp read=731972 written=732012
+   ->  Gather  (cost=2324221.12..2324221.33 rows=2 width=8) (actual time=22845.941..23616.515 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606, temp read=731972 written=732012
+         ->  Partial Aggregate  (cost=2323221.12..2323221.13 rows=1 width=8) (actual time=22844.247..22847.292 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606, temp read=731972 written=732012
+               ->  Parallel Hash Join  (cost=199643.06..2225355.19 rows=39146372 width=33) (actual time=12878.830..21543.531 rows=31247996.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606, temp read=731972 written=732012
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.114..4913.481 rows=32366963.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3914665 width=4) (actual time=1161.880..1161.880 rows=3124799.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 124544kB
+                           Buffers: shared hit=83334, temp written=20620
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3914665 width=4) (actual time=0.012..413.717 rows=3124799.67 loops=3)
+                                 Filter: (dval < 'f'::text)
+                                 Rows Removed by Filter: 208534
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.761 ms
+ Execution Time: 23616.615 ms
+(24 rows)
+
+
+  Average Time: 24102.49 ms | Avg Workers: 2.0
+Stopping server...
+Starting server: Bloom=False, Workers=2
+Benchmarking: Filter < 'f' | Bloom=False | Workers=2
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2324221.34..2324221.35 rows=1 width=8) (actual time=21337.653..22182.791 rows=1.00 loops=1)
+   Buffers: shared read=916668, temp read=753209 written=753236
+   ->  Gather  (cost=2324221.12..2324221.33 rows=2 width=8) (actual time=21318.755..22182.783 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared read=916668, temp read=753209 written=753236
+         ->  Partial Aggregate  (cost=2323221.12..2323221.13 rows=1 width=8) (actual time=21318.375..21321.314 rows=1.00 loops=3)
+               Buffers: shared read=916668, temp read=753209 written=753236
+               ->  Parallel Hash Join  (cost=199643.06..2225355.19 rows=39146372 width=33) (actual time=11075.911..19987.520 rows=31247996.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared read=916668, temp read=753209 written=753236
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.084..3213.848 rows=33333333.33 loops=3)
+                           Buffers: shared read=833334
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3914665 width=4) (actual time=949.299..949.300 rows=3124799.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 124576kB
+                           Buffers: shared read=83334, temp written=20616
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3914665 width=4) (actual time=0.094..439.041 rows=3124799.67 loops=3)
+                                 Filter: (dval < 'f'::text)
+                                 Rows Removed by Filter: 208534
+                                 Buffers: shared read=83334
+ Planning:
+   Buffers: shared hit=167 read=43
+ Planning Time: 1.071 ms
+ Execution Time: 22182.893 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2324221.34..2324221.35 rows=1 width=8) (actual time=21795.013..22588.522 rows=1.00 loops=1)
+   Buffers: shared hit=84198 read=832470, temp read=753212 written=753244
+   ->  Gather  (cost=2324221.12..2324221.33 rows=2 width=8) (actual time=21782.016..22588.514 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=84198 read=832470, temp read=753212 written=753244
+         ->  Partial Aggregate  (cost=2323221.12..2323221.13 rows=1 width=8) (actual time=21780.304..21783.337 rows=1.00 loops=3)
+               Buffers: shared hit=84198 read=832470, temp read=753212 written=753244
+               ->  Parallel Hash Join  (cost=199643.06..2225355.19 rows=39146372 width=33) (actual time=11200.288..20470.948 rows=31247996.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=84198 read=832470, temp read=753212 written=753244
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.128..3276.852 rows=33333333.33 loops=3)
+                           Buffers: shared hit=864 read=832470
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3914665 width=4) (actual time=915.164..915.165 rows=3124799.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 124544kB
+                           Buffers: shared hit=83334, temp written=20616
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3914665 width=4) (actual time=0.015..416.644 rows=3124799.67 loops=3)
+                                 Filter: (dval < 'f'::text)
+                                 Rows Removed by Filter: 208534
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.760 ms
+ Execution Time: 22588.619 ms
+(24 rows)
+
+
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=2324221.34..2324221.35 rows=1 width=8) (actual time=21425.637..22268.793 rows=1.00 loops=1)
+   Buffers: shared hit=85062 read=831606, temp read=753211 written=753248
+   ->  Gather  (cost=2324221.12..2324221.33 rows=2 width=8) (actual time=21425.622..22268.785 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=85062 read=831606, temp read=753211 written=753248
+         ->  Partial Aggregate  (cost=2323221.12..2323221.13 rows=1 width=8) (actual time=21405.738..21405.742 rows=1.00 loops=3)
+               Buffers: shared hit=85062 read=831606, temp read=753211 written=753248
+               ->  Parallel Hash Join  (cost=199643.06..2225355.19 rows=39146372 width=33) (actual time=11057.443..20100.830 rows=31247996.67 loops=3)
+                     Hash Cond: (fact.id = dim.id)
+                     Buffers: shared hit=85062 read=831606, temp read=753211 written=753248
+                     ->  Parallel Seq Scan on fact  (cost=0.00..1250001.00 rows=41666700 width=37) (actual time=0.124..3214.283 rows=33333333.33 loops=3)
+                           Buffers: shared hit=1728 read=831606
+                     ->  Parallel Hash  (cost=135417.75..135417.75 rows=3914665 width=4) (actual time=924.465..924.466 rows=3124799.67 loops=3)
+                           Buckets: 4194304  Batches: 4  Memory Usage: 124544kB
+                           Buffers: shared hit=83334, temp written=20620
+                           ->  Parallel Seq Scan on dim  (cost=0.00..135417.75 rows=3914665 width=4) (actual time=0.014..417.763 rows=3124799.67 loops=3)
+                                 Filter: (dval < 'f'::text)
+                                 Rows Removed by Filter: 208534
+                                 Buffers: shared hit=83334
+ Planning:
+   Buffers: shared hit=210
+ Planning Time: 0.755 ms
+ Execution Time: 22268.891 ms
+(24 rows)
+
+
+  Average Time: 22346.80 ms | Avg Workers: 2.0
+Stopping server...
+Stopping server...
+

@@ -1,0 +1,81 @@
+
+\section{Theoretical Analysis of LIP}
+This appendix provides a formal optimization analysis for the Bloom filter pipeline.
+
+\subsection{Setup}
+We analyze Lookahead Information Passing (LIP) for a fact table $F$ joined with 
+$m$ dimension tables $D_1, D_2, \dots, D_m$, each equipped with a Bloom filter.
+These filters are applied sequentially in the order of the joins:
+the filter of $D_1$ is applied first, followed by $D_2$, and so on.
+This ordering ensures that each filter receives only the tuples that passed all earlier filters.
+
+\begin{itemize}
+    \item The fact table $F$ has $N$ tuples.
+    \item Each dimension table $D_i$ has selectivity $S_i$.
+    \item Each Bloom filter $i$ has a valid cost function $f(k_i, p_i)$, where $k_i$ is the number of hash functions and $p_i$ is the false positive rate.
+    \item The probe cost for dimension $i$ is $h_i$.
+\end{itemize}
+
+For this analysis, we assume that the number of hash functions $k_i$ is fixed to a constant $K$ for all filters (e.g., $K=2$ based on our experimental results). Thus, we can treat the cost purely as a function of the false positive rate, $f(p_i)$.
+We assume $f(p_i)$ is a \textbf{decreasing, strictly convex} function of $p_i$.
+\begin{enumerate}
+    \item \textbf{Decreasing}: A lower false positive rate (better filtering) requires a larger bit array size (reducing cache locality) or more computation, increasing the per-tuple cost. Thus, as $p_i$ increases (filter becomes looser), the cost $f(p_i)$ decreases.
+    \item \textbf{Convex}: The marginal cost of improving the false positive rate increases as $p_i$ approaches 0. It becomes exponentially expensive to achieve infinitesimally small error rates.
+\end{enumerate}
+
+The probability that a tuple passes filter $i$ is
+\[
+q_i = S_i + (1 - S_i)p_i,
+\]
+and the number of tuples that survive after all filters is
+\[
+N_m = N \prod_{i=1}^{m} q_i.
+\]
+
+\subsection{Total Cost and Benefit}
+The total execution cost has two parts:
+\begin{enumerate}
+    \item Bloom filter evaluation at stage $i$: $N\!\prod_{t<i} q_t$ tuples, cost per tuple $f(p_i)$.
+    \item Hash-table probe for dimension $i$ (performed \emph{after all filters}).
+\end{enumerate}
+Hence,
+\[
+\mathcal{L}(\mathbf{p}) \;=\;
+N \sum_{i=1}^{m} \!\Big( \prod_{t<i} q_t \Big) f(p_i)
+\;+\;
+N \sum_{i=1}^{m} \!\Big( \prod_{t<i} S_t \Big)\!\Big( \prod_{t>i} q_t \Big) h_i.
+\]
+
+\subsection{Optimization Conditions}
+We seek to minimize the total cost $\mathcal{L}(\mathbf{p})$. The decision variable for stage $k$ is $p_k$.
+
+\subsubsection{First-Order Condition}
+Differentiating $\mathcal{L}$ with respect to $p_k$ (assuming all other $p_{j}$ are fixed):
+\[
+\begin{split}
+\frac{\partial \mathcal{L}}{\partial p_k} &= 
+\underbrace{N \Big(\prod_{t<k} q_t\Big) f'(p_k)}_{\text{Marginal change in local cost}} \\
+&\quad + \underbrace{(1-S_k) \Bigg[ 
+    N \sum_{j>k} \Big( \frac{\prod_{t<j} q_t}{q_k} \Big) f(p_j) 
+    + 
+    N \sum_{j} \mathbb{I}(j \neq k) \frac{\partial (\text{Probe}_j)}{\partial p_k} 
+\Bigg]}_{\text{Marginal change in downstream load}}.
+\end{split}
+\]
+Setting $\frac{\partial \mathcal{L}}{\partial p_k} = 0$:
+Since $f(p)$ is decreasing, $f'(p_k) < 0$. The first term is negative (savings locally by loosening the filter).
+The second term is positive (increased cost downstream by letting more tuples pass).
+The optimum $p_k^*$ balances these opposing forces.
+
+\subsubsection{Second-Order Condition}
+\[
+\frac{\partial^2 \mathcal{L}}{\partial p_k^2} = N \Big(\prod_{t<k} q_t\Big) f''(p_k).
+\]
+Since $f(p)$ is strictly convex, $f''(p_k) > 0$. Thus $\frac{\partial^2 \mathcal{L}}{\partial p_k^2} > 0$, confirming a minimum.
+
+\subsection{Conclusion}
+This convexity argument leads to a robust qualitative conclusion: \textbf{optimal Bloom filter pipelines should use progressively increasing false positive rates}.
+The first filter should be the tightest (investing heavily to remove tuples as early as possible), and subsequent filters should be progressively looser. This aligns with the intuition that we should spend the most resources where they yield the maximum compounding savings—at the start of the pipeline.
+
+It is important to distinguish this result from the standard heuristic in join optimization. Traditional work correctly emphasizes that filters should be \emph{ordered} by selectivity (or rank-ordered by selectivity-to-cost ratio), placing the most selective filters first to reduce cardinality as quickly as possible.
+Our analysis complements this: it states that \emph{once} the filters are ordered (e.g., by selectivity), one should not assign them uniform memory or hash resources. Instead, the false positive rates should be tuned according to position: the earlier filters in the chosen order justify a stricter false positive rate than the later ones, regardless of their individual selectivities, simply because they protect more downstream operations.
